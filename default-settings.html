@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>البيانات الافتراضية - African Express Travel</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+    :root {
+      --bg-warm: #F7F4EF;
+      --card-bg: #FFFFFF;
+      --text-main: #2C2523;
+      --border-subtle: #E8E2D9;
+      --primary-accent: #D96B43;        /* برتقالي دافئ من اللوجو */
+      --primary-accent-hover: #C25832;
+      --secondary-accent: #5A4238;      /* بني داكن مريح للعين */
+      --secondary-accent-hover: #45322A;
+      --header-bg: #FAF6F0;
+    }
+
+    body {
+      background-color: var(--bg-warm) !important;
+      color: var(--text-main);
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.6;
+    }
+
+    .main-container {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .page-title {
+      color: var(--secondary-accent);
+    }
+
+    .section-title {
+      color: var(--secondary-accent);
+      font-size: 1.15rem;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 8px;
+    }
+
+    .company-card {
+      background-color: var(--header-bg);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--secondary-accent);
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      background-color: #FAFAFA;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+      background-color: #FFFFFF;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 0 0.25rem rgba(217, 107, 67, 0.15);
+    }
+
+    /* أزرار اختيار الشركة */
+    .company-tab {
+      background-color: #FFFFFF;
+      border: 1.5px solid var(--border-subtle);
+      color: var(--secondary-accent);
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .company-tab:hover {
+      border-color: var(--primary-accent);
+      color: var(--primary-accent);
+    }
+
+    .company-tab.active-company {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+      border-color: var(--secondary-accent);
+    }
+
+    /* أزرار التحكم والـ Menu */
+    .menu-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      font-size: 1.5rem;
+      border: 1.5px solid var(--border-subtle);
+      background: var(--card-bg);
+      color: var(--secondary-accent);
+      border-radius: 10px;
+      padding: 4px 14px;
+      transition: all 0.2s ease;
+    }
+
+    .menu-btn:hover {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    .btn-custom-orange {
+      background-color: var(--primary-accent);
+      color: #FFFFFF;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-custom-orange:hover {
+      background-color: var(--primary-accent-hover);
+      color: #FFFFFF;
+    }
+
+    .btn-outline-custom-brown {
+      color: var(--secondary-accent);
+      border: 1.5px solid var(--secondary-accent);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-outline-custom-brown:hover {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    /* القائمة الجانبية Offcanvas */
+    .offcanvas {
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    .offcanvas-header {
+      background-color: var(--header-bg);
+      border-bottom: 1px solid var(--border-subtle) !important;
+    }
+
+    .nav-link-custom {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 10px;
+      color: var(--secondary-accent);
+      background-color: #FFFFFF;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-link-custom:hover {
+      border-color: var(--primary-accent);
+      color: var(--primary-accent);
+      background-color: var(--header-bg);
+    }
+
+    .nav-link-custom.active-link {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+      border-color: var(--secondary-accent);
+    }
+
+    .alert-custom-success {
+      background-color: #E8F5E9;
+      border: 1px solid #C8E6C9;
+      color: #2E7D32;
+      border-radius: 8px;
+    }
+
+    .client-badge {
+      background-color: #FFFFFF;
+      border: 1.5px solid var(--border-subtle);
+      color: var(--secondary-accent);
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .client-badge .btn-remove-client {
+      color: var(--primary-accent);
+      cursor: pointer;
+      font-weight: bold;
+      border: none;
+      background: none;
+      padding: 0;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="p-3 p-md-4 position-relative">
+
+  <!-- زر القائمة الجانبية أعلى اليمين -->
+  <button class="btn menu-btn shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu" aria-controls="sideMenu">
+    ☰
+  </button>
+
+  <div class="container main-container p-4 rounded mt-4" style="max-width: 720px;">
+    <!-- الهيدر أزرار الرجوع والتوجيه -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border-subtle) !important;">
+      <h3 class="mb-0 fw-bold page-title">⚙️ البيانات الافتراضية</h3>
+      <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←</a>
+    </div>
+
+    <!-- تنبيه نجاح الحفظ -->
+    <div id="alertSuccess" class="alert alert-custom-success d-none text-center fw-bold mb-4" role="alert">
+      تم حفظ بيانات الشركة والعملاء بنجاح!
+    </div>
+
+    <!-- قسم اختيار وتحديد الشركة النشطة -->
+    <div class="company-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="section-title mb-0 border-0 pb-0">🏢 اختر الشركة لتعديل إعداداتها</h5>
+      </div>
+      
+      <div id="companyTabsContainer" class="d-flex flex-wrap gap-2 mb-3">
+        <!-- يتم توليد أزرار الشركات هنا بواسطة JS -->
+      </div>
+
+      <div class="input-group">
+        <input type="text" class="form-control" id="newCompanyNameInput" placeholder="أدخل اسم شركة جديدة لإضافتها">
+        <button class="btn btn-outline-custom-brown fw-bold" type="button" id="btnAddNewCompany">إضافة شركة +</button>
+      </div>
+    </div>
+
+    <form id="defaultSettingsForm">
+      <!-- قسم إعدادات الشركة المحدد حالياً -->
+      <div class="company-card mb-4">
+        <h5 class="section-title mb-3" id="activeCompanyTitle">📝 إعدادات الشركة</h5>
+
+        <div class="mb-3">
+          <label for="companyName" class="form-label">اسم الشركة</label>
+          <input type="text" class="form-control" id="companyName" placeholder="اسم الشركة" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="companyLicense" class="form-label">رقم ترخيص الشركة</label>
+          <input type="text" class="form-control" id="companyLicense" placeholder="أدخل رقم الترخيص" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="negotiatorName" class="form-label">اسم المفاوض</label>
+          <input type="text" class="form-control" id="negotiatorName" placeholder="أدخل اسم المفاوض" required>
+        </div>
+
+        <div class="mb-0">
+          <label for="negotiatorNationalId" class="form-label">الرقم القومي (المفاوض)</label>
+          <input type="text" class="form-control" id="negotiatorNationalId" placeholder="أدخل الرقم القومي للمفاوض" required>
+        </div>
+      </div>
+
+      <!-- قسم عملاء الشركة المحدد حالياً -->
+      <div class="company-card mb-4">
+        <h5 class="section-title mb-3">👥 عملاء الشركة</h5>
+        <p class="text-muted small mb-3">أضف قائمة العملاء التابعين للشركة المحددة</p>
+
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="clientInput" placeholder="أدخل اسم العميل">
+          <button class="btn btn-outline-custom-brown fw-bold" type="button" id="btnAddClient">إضافة عميل +</button>
+        </div>
+
+        <!-- قائمة العملاء المضافين -->
+        <div id="clientsContainer" class="d-flex flex-wrap gap-2">
+          <!-- تظهر بطاقات العملاء هنا تلقائياً -->
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-custom-orange w-100 py-2 fs-5">حفظ بيانات الشركة</button>
+    </form>
+  </div>
+
+  <!-- ==================== القائمة الجانبية ==================== -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu" aria-labelledby="sideMenuLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title fw-bold" id="sideMenuLabel" style="color: var(--secondary-accent);">القائمة الرئيسية</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column gap-3 p-4">
+      
+      <a href="index.html" class="nav-link-custom text-start py-3 px-3 fw-bold d-flex align-items-center justify-content-between">
+        <span>📝 إضافة رحلة جديدة</span>
+        <span>←</span>
+      </a>
+
+      <a href="registered-cars.html" class="nav-link-custom text-start py-3 px-3 fw-bold d-flex align-items-center justify-content-between">
+        <span>🚗 إعدادات العربيات المسجلة</span>
+        <span>←</span>
+      </a>
+
+      <a href="permits-history.html" class="nav-link-custom text-start py-3 px-3 fw-bold d-flex align-items-center justify-content-between">
+        <span>📋 تصاريح آخر 72 ساعة</span>
+        <span>←</span>
+      </a>
+
+      <a href="default-settings.html" class="nav-link-custom active-link text-start py-3 px-3 fw-bold d-flex align-items-center justify-content-between">
+        <span>⚙️️ البيانات الافتراضية</span>
+        <span>←</span>
+      </a>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const companyTabsContainer = document.getElementById('companyTabsContainer');
+  const btnAddNewCompany = document.getElementById('btnAddNewCompany');
+  const newCompanyNameInput = document.getElementById('newCompanyNameInput');
+  const activeCompanyTitle = document.getElementById('activeCompanyTitle');
+
+  const companyNameInput = document.getElementById('companyName');
+  const companyLicenseInput = document.getElementById('companyLicense');
+  const negotiatorNameInput = document.getElementById('negotiatorName');
+  const negotiatorNationalIdInput = document.getElementById('negotiatorNationalId');
+
+  const clientInput = document.getElementById('clientInput');
+  const btnAddClient = document.getElementById('btnAddClient');
+  const clientsContainer = document.getElementById('clientsContainer');
+
+  const form = document.getElementById('defaultSettingsForm');
+  const alertSuccess = document.getElementById('alertSuccess');
+
+  // الشركات الافتراضية الموحدة لجميع صفحات النظام
+  const defaultCompaniesData = {
+    "افريكان اكسبريس": {
+      license: "454",
+      negotiatorName: "عمرو خالد",
+      negotiatorNationalId: "29801011234567",
+      clients: ["افريكان", "سامح", "الحجيج"]
+    },
+    "أي ديال تورز": {
+      license: "1061",
+      negotiatorName: "روسلان ميسرة",
+      negotiatorNationalId: "29505051234567",
+      clients: ["أي ديال", "عميل 1"]
+    },
+    "سيفين": {
+      license: "11223",
+      negotiatorName: "حسن السيد",
+      negotiatorNationalId: "29210101234567",
+      clients: ["سيفين جروب", "الشركة المصرية"]
+    },
+    "فوياج": {
+      license: "22112",
+      negotiatorName: "شهاب",
+      negotiatorNationalId: "29903031234567",
+      clients: ["عميل فوياج 1"]
+    }
+  };
+
+  let companiesStore = JSON.parse(localStorage.getItem('companiesSettingsStore')) || defaultCompaniesData;
+  let activeCompanyKey = localStorage.getItem('activeCompanyKey') || Object.keys(companiesStore)[0] || "افريكان اكسبريس";
+
+  if (!companiesStore[activeCompanyKey]) {
+    activeCompanyKey = Object.keys(companiesStore)[0];
+  }
+
+  function renderCompanyTabs() {
+    companyTabsContainer.innerHTML = '';
+    Object.keys(companiesStore).forEach(compName => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `company-tab ${compName === activeCompanyKey ? 'active-company' : ''}`;
+      btn.textContent = compName;
+      btn.addEventListener('click', () => {
+        selectCompany(compName);
+      });
+      companyTabsContainer.appendChild(btn);
+    });
+  }
+
+  function selectCompany(compName) {
+    activeCompanyKey = compName;
+    localStorage.setItem('activeCompanyKey', activeCompanyKey);
+    renderCompanyTabs();
+    loadActiveCompanyData();
+  }
+
+  function loadActiveCompanyData() {
+    const data = companiesStore[activeCompanyKey] || { license: '', negotiatorName: '', negotiatorNationalId: '', clients: [] };
+    
+    activeCompanyTitle.textContent = `📝 إعدادات شركة: (${activeCompanyKey})`;
+    companyNameInput.value = activeCompanyKey;
+    companyLicenseInput.value = data.license || '';
+    negotiatorNameInput.value = data.negotiatorName || '';
+    negotiatorNationalIdInput.value = data.negotiatorNationalId || '';
+    
+    renderClients();
+  }
+
+  function renderClients() {
+    clientsContainer.innerHTML = '';
+    const currentClients = companiesStore[activeCompanyKey]?.clients || [];
+
+    currentClients.forEach((client, index) => {
+      const badge = document.createElement('span');
+      badge.className = 'client-badge';
+      badge.innerHTML = `
+        ${client}
+        <button type="button" class="btn-remove-client" aria-label="حذف">&times;</button>
+      `;
+      badge.querySelector('.btn-remove-client').addEventListener('click', function() {
+        companiesStore[activeCompanyKey].clients.splice(index, 1);
+        renderClients();
+      });
+      clientsContainer.appendChild(badge);
+    });
+  }
+
+  function addClient() {
+    const val = clientInput.value.trim();
+    if (val) {
+      if (!companiesStore[activeCompanyKey].clients) {
+        companiesStore[activeCompanyKey].clients = [];
+      }
+      if (!companiesStore[activeCompanyKey].clients.includes(val)) {
+        companiesStore[activeCompanyKey].clients.push(val);
+        renderClients();
+      }
+      clientInput.value = '';
+    }
+  }
+
+  btnAddClient.addEventListener('click', addClient);
+  clientInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addClient();
+    }
+  });
+
+  btnAddNewCompany.addEventListener('click', function() {
+    const newCompName = newCompanyNameInput.value.trim();
+    if (newCompName) {
+      if (!companiesStore[newCompName]) {
+        companiesStore[newCompName] = {
+          license: '',
+          negotiatorName: '',
+          negotiatorNationalId: '',
+          clients: []
+        };
+        newCompanyNameInput.value = '';
+        selectCompany(newCompName);
+      } else {
+        selectCompany(newCompName);
+        newCompanyNameInput.value = '';
+      }
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const updatedName = companyNameInput.value.trim();
+
+    if (updatedName !== activeCompanyKey) {
+      companiesStore[updatedName] = {
+        ...companiesStore[activeCompanyKey],
+        license: companyLicenseInput.value.trim(),
+        negotiatorName: negotiatorNameInput.value.trim(),
+        negotiatorNationalId: negotiatorNationalIdInput.value.trim()
+      };
+      delete companiesStore[activeCompanyKey];
+      activeCompanyKey = updatedName;
+    } else {
+      companiesStore[activeCompanyKey].license = companyLicenseInput.value.trim();
+      companiesStore[activeCompanyKey].negotiatorName = negotiatorNameInput.value.trim();
+      companiesStore[activeCompanyKey].negotiatorNationalId = negotiatorNationalIdInput.value.trim();
+    }
+
+    localStorage.setItem('companiesSettingsStore', JSON.stringify(companiesStore));
+    localStorage.setItem('activeCompanyKey', activeCompanyKey);
+
+    renderCompanyTabs();
+    loadActiveCompanyData();
+
+    alertSuccess.classList.remove('d-none');
+    setTimeout(() => {
+      alertSuccess.classList.add('d-none');
+    }, 3000);
+  });
+
+  renderCompanyTabs();
+  loadActiveCompanyData();
+});
+  </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passengers List</title>
+    <style>
+        /* إعدادات الطباعة الأساسية */
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: ltr;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            color: #000;
+        }
+
+        .page-container {
+            width: 100%;
+            margin: auto;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        /* تنسيق الجدول */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 8px 10px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #ffffff;
+            font-weight: bold;
+        }
+
+        /* عرض الأعمدة */
+        th:nth-child(1), td:nth-child(1) { width: 8%; }  /* No */
+        th:nth-child(2), td:nth-child(2) { width: 28%; text-align: left; } /* Names */
+        th:nth-child(3), td:nth-child(3) { width: 16%; } /* Nationality */
+        th:nth-child(4), td:nth-child(4) { width: 20%; } /* Hotel */
+        th:nth-child(5), td:nth-child(5) { width: 10%; } /* Room */
+        th:nth-child(6), td:nth-child(6) { width: 10%; } /* Price */
+        th:nth-child(7), td:nth-child(7) { width: 8%; }  /* t.NO */
+
+        /* منطقة الإقرار والتوقيع */
+        .footer-section {
+            margin-top: 30px;
+            font-size: 15px;
+            line-height: 1.8;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .signature-line {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .dots {
+            border-bottom: 2px dotted #000;
+            width: 250px;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        /* إخفاء زر الطباعة أثناء الطباعة */
+        @media print {
+            .print-btn {
+                display: none !important;
+            }
+        }
+
+        /* زر الطباعة للعرض فقط */
+        .print-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 25px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn" onclick="window.print()">Print / طباعة</button>
+
+    <div class="page-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Names</th>
+                    <th>Nationality</th>
+                    <th>Hotel</th>
+                    <th>Room</th>
+                    <th>Price</th>
+                    <th>t.NO</th>
+                </tr>
+            </thead>
+            <tbody id="passengersListBody">
+                <!-- سيتم تعبئة البيانات هنا ديناميكياً بواسطة JavaScript -->
+            </tbody>
+        </table>
+
+        <div class="footer-section">
+            <p>اقر ان البيانات صحيحه وعلي مسؤلية الشركة</p>
+            <div class="signature-line">
+                <span>التوقيع:</span>
+                <span class="dots"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const storedData = localStorage.getItem('passengersList');
+        const tbody = document.getElementById('passengersListBody');
+
+        if (storedData) {
+          const passengers = JSON.parse(storedData);
+          tbody.innerHTML = '';
+
+          passengers.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${p.no}</td>
+              <td style="text-align: left;">${p.name}</td>
+              <td>${p.nationality}</td>
+              <td>${p.hotel}</td>
+              <td>${p.room}</td>
+              <td>${p.price}</td>
+              <td>${p.t_no || ''}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      });
+    </script>
+
+</body>
+</html>

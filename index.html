@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>نموذج رحلة - African Express Travel</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+    :root {
+      --bg-warm: #F7F4EF;
+      --card-bg: #FFFFFF;
+      --text-main: #2C2523;
+      --text-muted: #6C635F;
+      --border-subtle: #E8E2D9;
+      --primary-accent: #D96B43;        /* برتقالي دافئ من اللوجو */
+      --primary-accent-hover: #C25832;
+      --secondary-accent: #5A4238;      /* بني داكن مريح للعين */
+      --secondary-accent-hover: #45322A;
+      --gold-accent: #EAA850;           /* أصفر ذهبي دافئ */
+      --header-bg: #FAF6F0;
+    }
+
+    body {
+      background-color: var(--bg-warm) !important;
+      color: var(--text-main);
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* 📌 تنسيقات شريط التابات العلوي */
+    .tabs-container {
+      background-color: #EFE8DE;
+      padding: 8px 12px 0 12px;
+      border-radius: 12px 12px 0 0;
+      border: 1px solid var(--border-subtle);
+      border-bottom: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background-color: #E2D8C9;
+      color: var(--secondary-accent);
+      border: 1px solid var(--border-subtle);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      background-color: #D8CBBA;
+    }
+
+    .tab-btn.active {
+      background-color: var(--card-bg);
+      color: var(--primary-accent);
+      border-top: 3px solid var(--primary-accent);
+      font-weight: 700;
+    }
+
+    .tab-close-btn {
+      border: none;
+      background: transparent;
+      color: #888;
+      font-weight: bold;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0 2px;
+      border-radius: 50%;
+    }
+
+    .tab-close-btn:hover {
+      color: #dc3545;
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .add-tab-btn {
+      background-color: var(--primary-accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .add-tab-btn:hover {
+      background-color: var(--primary-accent-hover);
+    }
+
+    /* زر القائمة الجانبية (3 شرط) */
+    .menu-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 1050;
+      font-size: 1.25rem;
+      border: 1px solid var(--border-subtle);
+      background: var(--card-bg);
+      color: var(--secondary-accent);
+      border-radius: 10px;
+      padding: 6px 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.25s ease;
+    }
+
+    .menu-btn:hover {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+      border-color: var(--secondary-accent);
+    }
+
+    /* القائمة الجانبية Offcanvas */
+    .offcanvas-header-custom {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    .offcanvas {
+      border-top-left-radius: 16px;
+      border-bottom-left-radius: 16px;
+    }
+
+    /* البطاقة الرئيسية */
+    .main-container {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .page-title {
+      color: var(--secondary-accent);
+      position: relative;
+      padding-bottom: 12px;
+    }
+
+    .page-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background-color: var(--primary-accent);
+      border-radius: 2px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--secondary-accent);
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      background-color: #FAFAFA;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background-color: #FFFFFF;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 0 0.25rem rgba(217, 107, 67, 0.15);
+    }
+
+    .btn-main-action {
+      background-color: var(--primary-accent);
+      border-color: var(--primary-accent);
+      color: #FFFFFF;
+      font-weight: 700;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-main-action:hover {
+      background-color: var(--primary-accent-hover);
+      border-color: var(--primary-accent-hover);
+      color: #FFFFFF;
+    }
+
+    .btn-outline-custom-brown {
+      color: var(--secondary-accent);
+      border: 1.5px solid var(--secondary-accent);
+      border-radius: 8px;
+    }
+
+    .btn-outline-custom-brown:hover {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    .btn-outline-custom-orange {
+      color: var(--primary-accent);
+      border: 1.5px solid var(--primary-accent);
+      border-radius: 8px;
+    }
+
+    .btn-outline-custom-orange:hover {
+      background-color: var(--primary-accent);
+      color: #FFFFFF;
+    }
+
+    .card-passengers {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-header-passengers {
+      background-color: var(--header-bg);
+      border-bottom: 1.5px solid var(--border-subtle);
+      padding: 12px 18px;
+    }
+
+    .passengers-table thead {
+      background-color: #F2EBE1;
+      color: var(--secondary-accent);
+      font-size: 0.88rem;
+    }
+
+    .passengers-table th {
+      font-weight: 700;
+      padding: 12px;
+    }
+
+    .passengers-table td {
+      padding: 8px;
+    }
+
+    .autocomplete-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .autocomplete-suggestion-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.9rem;
+      transition: background-color 0.15s ease;
+    }
+
+    .autocomplete-suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-suggestion-item:hover {
+      background-color: var(--header-bg);
+      color: var(--primary-accent);
+    }
+  </style>
+</head>
+<body class="p-3 p-md-4 position-relative">
+
+  <!-- زر فتح القائمة الجانبية -->
+  <button class="btn menu-btn fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu" aria-controls="sideMenu">
+    ☰ القائمة
+  </button>
+
+  <!-- القائمة الجانبية -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="sideMenu" aria-labelledby="sideMenuLabel">
+    <div class="offcanvas-header offcanvas-header-custom p-3">
+      <h5 class="offcanvas-title fw-bold text-white mb-0" id="sideMenuLabel">القائمة الرئيسية</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="إغلاق"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column gap-3 p-3">
+      <a href="registered-cars.html" class="btn btn-outline-custom-orange text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between">
+        <span>🚗 بيانات العربيات المسجلة</span>
+        <span>←</span>
+      </a>
+      <a href="permits-history.html" class="btn btn-outline-custom-brown text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between">
+        <span>📋 تصاريح آخر 72 ساعة</span>
+        <span>←</span>
+      </a>
+      <a href="default-settings.html" class="btn btn-outline-custom-brown text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between">
+        <span>⚙️️ البيانات الافتراضية</span>
+        <span>←</span>
+      </a>
+      <a href="index.html" class="btn btn-outline-custom-brown text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between">
+        <span>➕ إضافة رحلة جديدة</span>
+        <span>←</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="container my-2 mt-5 p-0">
+    <!-- 📌 شريط التابات العلوي -->
+    <div class="tabs-container" id="tabsBar">
+      <!-- يتم توليد التابات هنا تلقائياً بواسطة JavaScript -->
+      <button type="button" class="add-tab-btn" id="addNewTabBtn" title="إضافة رحلة جديدة">+</button>
+    </div>
+
+    <!-- Container الرئيسي للأستمارة -->
+    <div class="main-container p-4 p-md-5" id="printableArea">
+      <h3 class="mb-4 text-center fw-bold page-title">إضافة بيانات رحلة جديدة</h3>
+      <form id="tripForm" action="https://script.google.com/macros/s/AKfycbwWrMG_b-NO4dCGllAotKIP4ExAdueC6C5MKwzZXdSY0La94Ca9JRECJDTwAdLdRF5Q/exec" method="POST">
+        
+        <!-- اسم الشركة والعميل -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">اسم الشركة</label>
+            <select class="form-select" name="company_name" id="company_name">
+              <option value="افريكان اكسبريس">افريكان اكسبريس</option>
+              <option value="أي ديال تورز">أي ديال تورز</option>
+              <option value="فوياج">فوياج</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">العميل</label>
+            <select class="form-select" name="client_name" id="client_name">
+              <option value="سامح">سامح</option>
+              <option value="حجيج">حجيج</option>
+              <option value="افريكان">افريكان</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label class="form-label">نوع الرحلة</label>
+            <select class="form-select" name="trip_type" id="trip_type">
+              <option value="أوفر داي">أوفر داي</option>
+              <option value="أوفر نايت">أوفر نايت</option>
+              <option value="توصيلة">توصيلة</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">من</label>
+            <select class="form-select" name="from_location" id="from_location">
+              <option value="الغردقة">الغردقة</option>
+              <option value="مرسى علم">مرسى علم</option>
+              <option value="الأقصر">الأقصر</option>
+              <option value="أسوان">أسوان</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">إلى</label>
+            <select class="form-select" name="to_location" id="to_location">
+              <option value="القاهرة">القاهرة</option>
+              <option value="الأقصر">الأقصر</option>
+              <option value="أسوان">أسوان</option>
+              <option value="مرسى علم">مرسى علم</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">تاريخ الرحلة <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" name="trip_date" id="trip_date" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">الجنسية العامة</label>
+            <input type="text" class="form-control" name="nationality" id="nationality">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">العدد</label>
+            <input type="number" class="form-control" id="paxCountInput" name="pax_count" value="1" min="1">
+          </div>
+        </div>
+
+        <div class="card mb-4 card-passengers">
+          <div class="card-header card-header-passengers d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">بيانات المسافرين (Passengers Details)</h6>
+            <button type="button" class="btn btn-sm btn-main-action px-3" id="addPassengerBtn">
+              + إضافة مسافر جديد
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-bordered mb-0 text-center align-middle passengers-table" id="passengersTable">
+                <thead>
+                  <tr>
+                    <th style="width: 25%;">الاسم (Name)</th>
+                    <th style="width: 20%;">الجنسية (Nationality)</th>
+                    <th style="width: 20%;">اسم الفندق (Hotel Name)</th>
+                    <th style="width: 15%;">رقم الغرفة (Room Numb)</th>
+                    <th style="width: 15%;">السعر (Price)</th>
+                    <th style="width: 5%;">إجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="text" class="form-control form-control-sm" name="passenger_name[]" placeholder="الاسم"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="passenger_nationality[]" placeholder="الجنسية"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="hotel_name[]" placeholder="اسم الفندق"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="room_number[]" placeholder="رقم الغرفة"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="passenger_price[]" placeholder="السعر"></td>
+                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" disabled>&times;</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- بحث عن عربية -->
+        <div class="mb-3 position-relative">
+          <label class="form-label">بحث عن عربية (ابحث برقم العربية)</label>
+          <input type="text" class="form-control" id="carSearch" placeholder="اكتب رقم أو اسم العربية أو السائق..." autocomplete="off">
+          <div id="carSearchSuggestions" class="autocomplete-suggestions d-none"></div>
+        </div>
+
+        <hr class="my-4" style="border-color: var(--border-subtle);">
+
+        <div class="row mb-3 g-3">
+          <div class="col-md-2">
+            <label class="form-label">نوع العربية</label>
+            <select class="form-select form-select-lg" name="car_type" id="car_type" required>
+              <option value="" disabled selected>اختر نوع السيارة...</option>
+              <option value="ليموزين">ليموزين</option>
+              <option value="ميكروباص">ميكروباص</option>
+              <option value="كوستر">كوستر</option>
+              <option value="اوتوبيس">اوتوبيس</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">اسم العربية</label>
+            <input type="text" class="form-control" name="car_name" id="car_name">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">لوحة العربية</label>
+            <input type="text" class="form-control" name="car_plate" id="car_plate">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">رقم العربية</label>
+            <input type="text" class="form-control" name="car_number" id="car_number">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">رقم الشاسيه</label>
+            <input type="text" class="form-control" name="chassis_number" id="chassis_number">
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">اسم المرشد</label>
+            <input type="text" class="form-control" name="guide_name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">رقم المرشد</label>
+            <input type="text" class="form-control" name="guide_phone">
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">اسم السائق</label>
+            <input type="text" class="form-control" name="driver_name" id="driver_name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">رقم السائق</label>
+            <input type="text" class="form-control" name="driver_phone" id="driver_phone">
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">اسم السائق الاحتياطي</label>
+            <input type="text" class="form-control" name="backup_driver_name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">رقم السائق الاحتياطي</label>
+            <input type="text" class="form-control" name="backup_driver_phone">
+          </div>
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="saveNewCar" name="save_new_car">
+          <label class="form-check-label fw-normal" for="saveNewCar" style="color: var(--secondary-accent);">
+            حفظ بيانات هذه السيارة في قاعدة البيانات (إذا كانت جديدة)
+          </label>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">إضافة للبرنامج</label>
+          <textarea class="form-control" name="program_details" id="program_details" rows="2" placeholder="أدخل أي إضافات للبرنامج هنا..."></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">موعد الذهاب</label>
+          <input type="text" class="form-control" name="departure_time" placeholder="مثال: الساعة 08:00 صباحاً">
+        </div>
+
+        <div id="gfStatus" class="alert d-none" role="alert"></div>
+
+        <div id="step1Actions">
+          <button type="button" id="saveBtn" class="btn btn-main-action w-100 py-2 fs-5">حفظ وتأكيد</button>
+        </div>
+
+        <div id="step2Actions" class="d-none mt-3">
+          <div class="row g-2">
+            <div class="col-md-3 col-6"><button type="button" class="btn btn-outline-custom-brown w-100" id="printNoticeBtn">طباعة الإخطار</button></div>
+            <div class="col-md-3 col-6"><button type="button" class="btn btn-outline-custom-brown w-100" id="printListBtn">طباعة الليستة</button></div>
+            <div class="col-md-3 col-6"><button type="submit" formaction="https://script.google.com/macros/s/AKfycbwWrMG_b-NO4dCGllAotKIP4ExAdueC6C5MKwzZXdSY0La94Ca9JRECJDTwAdLdRF5Q/exec?action=download-notice" class="btn btn-outline-custom-orange w-100" id="downloadNoticeBtn">تحميل ملف الإخطار</button></div>
+            <div class="col-md-3 col-6"><button type="submit" formaction="https://script.google.com/macros/s/AKfycbwWrMG_b-NO4dCGllAotKIP4ExAdueC6C5MKwzZXdSY0La94Ca9JRECJDTwAdLdRF5Q/exec?action=download-passengers" class="btn btn-outline-custom-orange w-100" id="downloadListBtn">تحميل قائمة المسافرين</button></div>
+            <div class="col-md-6 col-12 mt-2"><button type="button" class="btn btn-outline-warning w-100" id="editPermitBtn">تعديل البيانات</button></div>
+            <div class="col-md-6 col-12 mt-2"><button type="button" class="btn btn-main-action w-100" id="addPermitBtn">إضافة رحلة جديدة</button></div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <iframe id="printIframe" style="display: none;"></iframe>
+
+  <script>
+    const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWrMG_b-NO4dCGllAotKIP4ExAdueC6C5MKwzZXdSY0La94Ca9JRECJDTwAdLdRF5Q/exec';
+
+    const defaultCarsData = [
+      {
+        company: "افريكان اكسبريس",
+        carType: "هاي اس",
+        carName: "تويوتا هيس",
+        carPlate: "أ ب ج",
+        carNumber: "1234",
+        chassisNumber: "CH987654321",
+        driverName: "أحمد علي",
+        driverPhone: "01000000000",
+        backupDriverName: "محمود حسن",
+        backupDriverPhone: "01100000000"
+      }
+    ];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const addPassengerBtn = document.getElementById('addPassengerBtn');
+      const tableBody = document.querySelector('#passengersTable tbody');
+      const paxCountInput = document.getElementById('paxCountInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const step1Actions = document.getElementById('step1Actions');
+      const step2Actions = document.getElementById('step2Actions');
+      const tripForm = document.getElementById('tripForm');
+      const tripDateInput = document.getElementById('trip_date');
+      const chassisNumberInput = document.getElementById('chassis_number');
+
+      const companyNameSelect = document.getElementById('company_name');
+      const clientNameSelect = document.getElementById('client_name');
+
+      const tripTypeSelect = document.getElementById('trip_type');
+      const fromLocationSelect = document.getElementById('from_location');
+      const toLocationSelect = document.getElementById('to_location');
+      const programDetailsTextarea = document.getElementById('program_details');
+
+      const tabsBar = document.getElementById('tabsBar');
+      const addNewTabBtn = document.getElementById('addNewTabBtn');
+
+      const defaultCompaniesData = {
+        "افريكان اكسبريس": { license: "454", negotiatorName: "عمرو خالد", negotiatorNationalId: "29801011234567", clients: [""] },
+        "أي ديال تورز": { license: "1061", negotiatorName: "روسلان ميسرة ", negotiatorNationalId: "29505051234567", clients: [" "] },
+        "فوياج": { license: "22112", negotiatorName: "شهاب", negotiatorNationalId: "5555", clients: [" "] }
+      };
+
+      const companiesStore = JSON.parse(localStorage.getItem('companiesSettingsStore')) || defaultCompaniesData;
+
+      let activeTabId = null;
+      let tabsList = [];
+
+      function initTabs() {
+        const savedTabs = localStorage.getItem('tripTabsData');
+        const savedActiveId = localStorage.getItem('activeTripTabId');
+
+        if (savedTabs) {
+          tabsList = JSON.parse(savedTabs);
+        }
+
+        if (!tabsList || tabsList.length === 0) {
+          const newTab = createNewTabObject(1);
+          tabsList = [newTab];
+          activeTabId = newTab.id;
+        } else {
+          activeTabId = savedActiveId && tabsList.some(t => t.id === savedActiveId) ? savedActiveId : tabsList[0].id;
+        }
+
+        renderTabs();
+        loadFormDataForTab(activeTabId);
+      }
+
+      function createNewTabObject(index) {
+        return {
+          id: 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          title: 'رحلة جديدة ' + index,
+          formData: {},
+          passengers: [{ name: '', nationality: '', hotel: '', room: '', price: '' }],
+          step: 1
+        };
+      }
+
+      function renderTabs() {
+        const existingButtons = tabsBar.querySelectorAll('.tab-btn');
+        existingButtons.forEach(btn => btn.remove());
+
+        tabsList.forEach((tab, idx) => {
+          const tabBtn = document.createElement('button');
+          tabBtn.type = 'button';
+          tabBtn.className = `tab-btn ${tab.id === activeTabId ? 'active' : ''}`;
+          
+          let displayTitle = tab.title;
+          if (tab.formData && tab.formData.to_location && tab.formData.to_location !== '') {
+            displayTitle = `${tab.formData.to_location} (${idx + 1})`;
+          }
+
+          tabBtn.innerHTML = `
+            <span>${displayTitle}</span>
+            <button type="button" class="tab-close-btn" data-id="${tab.id}" title="إغلاق التابة">&times;</button>
+          `;
+
+          tabBtn.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tab-close-btn')) return;
+            switchTab(tab.id);
+          });
+
+          const closeBtn = tabBtn.querySelector('.tab-close-btn');
+          closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeTab(tab.id);
+          });
+
+          tabsBar.insertBefore(tabBtn, addNewTabBtn);
+        });
+
+        localStorage.setItem('tripTabsData', JSON.stringify(tabsList));
+        localStorage.setItem('activeTripTabId', activeTabId);
+      }
+
+      function switchTab(targetTabId) {
+        if (activeTabId === targetTabId) return;
+        saveCurrentFormDataToTab();
+        activeTabId = targetTabId;
+        renderTabs();
+        loadFormDataForTab(activeTabId);
+      }
+
+      function closeTab(tabId) {
+        if (tabsList.length <= 1) {
+          alert('يجب أن تظل تابة واحدة على الأقل مفتوحة!');
+          return;
+        }
+
+        const index = tabsList.findIndex(t => t.id === tabId);
+        if (index !== -1) {
+          tabsList.splice(index, 1);
+          if (activeTabId === tabId) {
+            activeTabId = tabsList[Math.max(0, index - 1)].id;
+          }
+          renderTabs();
+          loadFormDataForTab(activeTabId);
+        }
+      }
+
+      addNewTabBtn.addEventListener('click', function() {
+        saveCurrentFormDataToTab();
+        const newTab = createNewTabObject(tabsList.length + 1);
+        tabsList.push(newTab);
+        activeTabId = newTab.id;
+        renderTabs();
+        loadFormDataForTab(activeTabId);
+      });
+
+      function saveCurrentFormDataToTab() {
+        const currentTab = tabsList.find(t => t.id === activeTabId);
+        if (!currentTab) return;
+
+        const formDataObj = {};
+        const elements = tripForm.querySelectorAll('input, select, textarea');
+        elements.forEach(el => {
+          if (el.name && !el.name.endsWith('[]')) {
+            formDataObj[el.name] = el.value;
+          }
+        });
+
+        const passengerRows = tableBody.querySelectorAll('tr');
+        const passengersArr = [];
+        passengerRows.forEach(row => {
+          passengersArr.push({
+            name: row.querySelector('input[name="passenger_name[]"]')?.value || '',
+            nationality: row.querySelector('input[name="passenger_nationality[]"]')?.value || '',
+            hotel: row.querySelector('input[name="hotel_name[]"]')?.value || '',
+            room: row.querySelector('input[name="room_number[]"]')?.value || '',
+            price: row.querySelector('input[name="passenger_price[]"]')?.value || ''
+          });
+        });
+
+        currentTab.formData = formDataObj;
+        currentTab.passengers = passengersArr;
+        currentTab.step = step2Actions.classList.contains('d-none') ? 1 : 2;
+
+        localStorage.setItem('tripTabsData', JSON.stringify(tabsList));
+      }
+
+      function loadFormDataForTab(tabId) {
+        const currentTab = tabsList.find(t => t.id === tabId);
+        if (!currentTab) return;
+
+        tripForm.reset();
+
+        const data = currentTab.formData || {};
+        Object.keys(data).forEach(key => {
+          const field = tripForm.querySelector(`[name="${key}"]`);
+          if (field) {
+            field.value = data[key];
+          }
+        });
+
+        if (data.company_name) {
+          companyNameSelect.value = data.company_name;
+        }
+        updateClientsList();
+        if (data.client_name) {
+          clientNameSelect.value = data.client_name;
+        }
+
+        tableBody.innerHTML = '';
+        const passengers = currentTab.passengers && currentTab.passengers.length > 0 ? currentTab.passengers : [{ name: '', nationality: '', hotel: '', room: '', price: '' }];
+        
+        passengers.forEach(p => {
+          const newRow = document.createElement('tr');
+          newRow.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm" name="passenger_name[]" value="${p.name || ''}" placeholder="الاسم"></td>
+            <td><input type="text" class="form-control form-control-sm" name="passenger_nationality[]" value="${p.nationality || ''}" placeholder="الجنسية"></td>
+            <td><input type="text" class="form-control form-control-sm" name="hotel_name[]" value="${p.hotel || ''}" placeholder="اسم الفندق"></td>
+            <td><input type="text" class="form-control form-control-sm" name="room_number[]" value="${p.room || ''}" placeholder="رقم الغرفة"></td>
+            <td><input type="text" class="form-control form-control-sm" name="passenger_price[]" value="${p.price || ''}" placeholder="السعر"></td>
+            <td><button type="button" class="btn btn-sm btn-outline-danger remove-row-btn">&times;</button></td>
+          `;
+          tableBody.appendChild(newRow);
+        });
+
+        updatePaxCountAndButtons();
+        updateProgramPlaceholder();
+
+        if (currentTab.step === 2) {
+          step1Actions.classList.add('d-none');
+          step2Actions.classList.remove('d-none');
+        } else {
+          step2Actions.classList.add('d-none');
+          step1Actions.classList.remove('d-none');
+        }
+      }
+
+      tripForm.addEventListener('input', function() {
+        saveCurrentFormDataToTab();
+        renderTabs();
+      });
+      tripForm.addEventListener('change', function() {
+        saveCurrentFormDataToTab();
+        renderTabs();
+      });
+
+      function populateCompanies() {
+        companyNameSelect.innerHTML = '';
+        Object.keys(companiesStore).forEach(company => {
+          const opt = document.createElement('option');
+          opt.value = company;
+          opt.textContent = company;
+          companyNameSelect.appendChild(opt);
+        });
+      }
+
+      function updateClientsList() {
+        const selectedCompany = companyNameSelect.value;
+        const companyData = companiesStore[selectedCompany];
+        
+        clientNameSelect.innerHTML = '';
+        
+        if (companyData && companyData.clients && companyData.clients.length > 0) {
+          companyData.clients.forEach(client => {
+            const opt = document.createElement('option');
+            opt.value = client;
+            opt.textContent = client;
+            clientNameSelect.appendChild(opt);
+          });
+        } else {
+          const opt = document.createElement('option');
+          opt.value = "";
+          opt.textContent = "لا يوجد عملاء لهذه الشركة";
+          clientNameSelect.appendChild(opt);
+        }
+      }
+
+      populateCompanies();
+
+      companyNameSelect.addEventListener('change', function() {
+        updateClientsList();
+      });
+
+      const carSearchInput = document.getElementById('carSearch');
+      const suggestionsBox = document.getElementById('carSearchSuggestions');
+
+      if (carSearchInput && suggestionsBox) {
+        document.addEventListener('click', function(e) {
+          if (!carSearchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+            suggestionsBox.classList.add('d-none');
+          }
+        });
+
+        carSearchInput.addEventListener('input', function() {
+          const query = this.value.trim().toLowerCase();
+          const selectedCompany = companyNameSelect.value;
+
+          if (query === '') {
+            suggestionsBox.classList.add('d-none');
+            suggestionsBox.innerHTML = '';
+            return;
+          }
+
+          const registeredCars = JSON.parse(localStorage.getItem('registeredCars')) || defaultCarsData;
+
+          const matchedCars = registeredCars.filter(car => {
+            const matchCompany = !car.company || car.company === selectedCompany;
+            const matchQuery = 
+              (car.carNumber && car.carNumber.toLowerCase().includes(query)) ||
+              (car.carName && car.carName.toLowerCase().includes(query)) ||
+              (car.driverName && car.driverName.toLowerCase().includes(query)) ||
+              (car.carPlate && car.carPlate.toLowerCase().includes(query));
+
+            return matchCompany && matchQuery;
+          });
+
+          if (matchedCars.length > 0) {
+            suggestionsBox.innerHTML = '';
+            matchedCars.forEach(car => {
+              const item = document.createElement('div');
+              item.className = 'autocomplete-suggestion-item d-flex justify-content-between align-items-center';
+              
+              item.innerHTML = `
+                <div>
+                  <strong>${car.carName || 'غير محدد'}</strong> 
+                  <span class="text-muted">(${car.carPlate || ''} ${car.carNumber || ''})</span>
+                </div>
+                <div>
+                  <span class="badge bg-secondary me-2">${car.carType || 'غير محدد'}</span>
+                  <small class="text-dark">👤 ${car.driverName || 'بدون سائق'}</small>
+                </div>
+              `;
+
+              item.addEventListener('click', function() {
+                if (document.getElementById('car_type') && car.carType) {
+                  document.getElementById('car_type').value = car.carType;
+                }
+                if (document.getElementById('car_name')) document.getElementById('car_name').value = car.carName || '';
+                if (document.getElementById('car_plate')) document.getElementById('car_plate').value = car.carPlate || '';
+                if (document.getElementById('car_number')) document.getElementById('car_number').value = car.carNumber || '';
+                if (document.getElementById('chassis_number')) document.getElementById('chassis_number').value = car.chassisNumber || '';
+                if (document.getElementById('driver_name')) document.getElementById('driver_name').value = car.driverName || '';
+                if (document.getElementById('driver_phone')) document.getElementById('driver_phone').value = car.driverPhone || '';
+
+                if (document.querySelector('input[name="backup_driver_name"]')) {
+                  document.querySelector('input[name="backup_driver_name"]').value = car.backupDriverName || '';
+                }
+                if (document.querySelector('input[name="backup_driver_phone"]')) {
+                  document.querySelector('input[name="backup_driver_phone"]').value = car.backupDriverPhone || '';
+                }
+
+                carSearchInput.value = `${car.carName || ''} - ${car.carNumber || ''}`;
+                suggestionsBox.classList.add('d-none');
+
+                saveCurrentFormDataToTab();
+              });
+
+              suggestionsBox.appendChild(item);
+            });
+            suggestionsBox.classList.remove('d-none');
+          } else {
+            suggestionsBox.innerHTML = '<div class="autocomplete-suggestion-item text-muted text-center">لا توجد سيارات مطابقة لهذه الشركة</div>';
+            suggestionsBox.classList.remove('d-none');
+          }
+        });
+
+        companyNameSelect.addEventListener('change', function() {
+          carSearchInput.value = '';
+          suggestionsBox.classList.add('d-none');
+        });
+      }
+
+      function updateProgramPlaceholder() {
+        const tripType = tripTypeSelect.value;
+        const toLocation = toLocationSelect.value;
+
+        if (toLocation === 'القاهرة') {
+          if (tripType === 'توصيلة') {
+            programDetailsTextarea.placeholder = 'البرنامج الافتراضي: رست الزعفرانة + (أضف أي تفاصيل أخرى)...';
+          } else {
+            programDetailsTextarea.placeholder = 'البرنامج الافتراضي: رست الزعفرانة + هرم + متحف جديد + قلعه + جوله نيل + محلات + غداء + مصر القديمه + خان الخليلي...';
+          }
+        } else if (toLocation === 'الأقصر') {
+          if (tripType === 'توصيلة') {
+            programDetailsTextarea.placeholder = 'البرنامج الافتراضي: رست الزعفرانة + (أضف أي تفاصيل أخرى)...';
+          } else {
+            programDetailsTextarea.placeholder = 'البرنامج الافتراضي: رست 85 – دندره -+كرنك+حتشبسوت+ملوك+ملكات+محلات+جزيره+جولة نيل+مرسي اهالي+غداء +...';
+          }
+        } else {
+          programDetailsTextarea.placeholder = 'أدخل تفاصيل البرنامج هنا...';
+        }
+      }
+
+      tripTypeSelect.addEventListener('change', updateProgramPlaceholder);
+      toLocationSelect.addEventListener('change', updateProgramPlaceholder);
+
+      function updatePaxCountAndButtons() {
+        const rows = tableBody.querySelectorAll('tr');
+        paxCountInput.value = rows.length;
+        rows.forEach((row) => {
+          const btn = row.querySelector('.remove-row-btn');
+          btn.disabled = rows.length === 1;
+        });
+      }
+
+      addPassengerBtn.addEventListener('click', function() {
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td><input type="text" class="form-control form-control-sm" name="passenger_name[]" placeholder="الاسم"></td>
+          <td><input type="text" class="form-control form-control-sm" name="passenger_nationality[]" placeholder="الجنسية"></td>
+          <td><input type="text" class="form-control form-control-sm" name="hotel_name[]" placeholder="اسم الفندق"></td>
+          <td><input type="text" class="form-control form-control-sm" name="room_number[]" placeholder="رقم الغرفة"></td>
+          <td><input type="text" class="form-control form-control-sm" name="passenger_price[]" placeholder="السعر"></td>
+          <td><button type="button" class="btn btn-sm btn-outline-danger remove-row-btn">&times;</button></td>
+        `;
+        tableBody.appendChild(newRow);
+        updatePaxCountAndButtons();
+        saveCurrentFormDataToTab();
+      });
+
+      tableBody.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row-btn')) {
+          e.target.closest('tr').remove();
+          updatePaxCountAndButtons();
+          saveCurrentFormDataToTab();
+        }
+      });
+
+      const gfStatus = document.getElementById('gfStatus');
+      function showStatus(msg, cls) {
+        gfStatus.className = 'alert ' + cls;
+        gfStatus.textContent = msg;
+        gfStatus.classList.remove('d-none');
+      }
+
+      function buildAppScriptPayload() {
+        const formData = new FormData(tripForm);
+        const payload = {};
+        
+        formData.forEach((value, key) => {
+          if (!key.endsWith('[]')) {
+            payload[key] = value;
+          }
+        });
+
+        const passengerRows = tableBody.querySelectorAll('tr');
+        const passengersArr = [];
+        passengerRows.forEach(row => {
+          passengersArr.push({
+            name: row.querySelector('input[name="passenger_name[]"]')?.value || '',
+            nationality: row.querySelector('input[name="passenger_nationality[]"]')?.value || '',
+            hotel: row.querySelector('input[name="hotel_name[]"]')?.value || '',
+            room: row.querySelector('input[name="room_number[]"]')?.value || '',
+            price: row.querySelector('input[name="passenger_price[]"]')?.value || ''
+          });
+        });
+
+        payload.passengers = passengersArr;
+
+        const selectedCompany = companyNameSelect.value;
+        const companyDetails = companiesStore[selectedCompany] || {};
+        payload.company_license = companyDetails.license || '';
+        payload.negotiator_name = companyDetails.negotiatorName || '';
+        payload.negotiator_id = companyDetails.negotiatorNationalId || '';
+
+        return payload;
+      }
+
+      async function sendToAppScript() {
+        showStatus('جاري إرسال البيانات للتطبيق Web App...', 'alert-info');
+        try {
+          const payload = buildAppScriptPayload();
+          const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+          
+          if (response.ok) {
+            showStatus('✅ تم تسجيل البيانات بنجاح في Google Apps Script', 'alert-success');
+            return true;
+          } else {
+            showStatus('⚠️ تم الإرسال ولكن رد الخادم غير مكتمل.', 'alert-warning');
+            return true;
+          }
+        } catch (err) {
+          console.error(err);
+          showStatus('❌ حصلت مشكلة أثناء الاتصال برابط Web App، تأكد من الاتصال بالشبكة.', 'alert-danger');
+          return false;
+        }
+      }
+
+      function saveCarToDatabaseIfNeeded() {
+        const saveNewCarCheckbox = document.getElementById('saveNewCar');
+        if (saveNewCarCheckbox && saveNewCarCheckbox.checked) {
+          const registeredCars = JSON.parse(localStorage.getItem('registeredCars')) || defaultCarsData;
+          const newCarObj = {
+            company: companyNameSelect.value,
+            carType: document.getElementById('car_type')?.value || '',
+            carName: document.getElementById('car_name')?.value || '',
+            carPlate: document.getElementById('car_plate')?.value || '',
+            carNumber: document.getElementById('car_number')?.value || '',
+            chassisNumber: document.getElementById('chassis_number')?.value || '',
+            driverName: document.getElementById('driver_name')?.value || '',
+            driverPhone: document.getElementById('driver_phone')?.value || '',
+            backupDriverName: document.querySelector('input[name="backup_driver_name"]')?.value || '',
+            backupDriverPhone: document.querySelector('input[name="backup_driver_phone"]')?.value || ''
+          };
+
+          registeredCars.push(newCarObj);
+          localStorage.setItem('registeredCars', JSON.stringify(registeredCars));
+        }
+      }
+
+      saveBtn.addEventListener('click', async function() {
+        if (tripDateInput.value.trim() === '') { tripDateInput.reportValidity(); return; }
+        
+        saveCarToDatabaseIfNeeded();
+
+        const currentPermits = JSON.parse(localStorage.getItem('tripPermits')) || [];
+        const newPermitRecord = {
+          company_name: companyNameSelect.value,
+          client_name: clientNameSelect.value,
+          tripType: tripTypeSelect.value,
+          from: fromLocationSelect.value,
+          to: toLocationSelect.value,
+          nationality: document.getElementById('nationality').value || 'غير محدد',
+          paxCount: parseInt(paxCountInput.value) || 1,
+          carType: document.getElementById('car_type').value,
+          carName: document.getElementById('car_name').value,
+          carNumber: document.getElementById('car_number').value,
+          driverName: document.getElementById('driver_name').value,
+          tripDate: tripDateInput.value,
+          createdAt: new Date().toISOString()
+        };
+
+        currentPermits.unshift(newPermitRecord);
+        localStorage.setItem('tripPermits', JSON.stringify(currentPermits));
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'جاري التسجيل...';
+        
+        await sendToAppScript();
+        
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'حفظ وتأكيد';
+
+        step1Actions.classList.add('d-none');
+        step2Actions.classList.remove('d-none');
+
+        saveCurrentFormDataToTab();
+      });
+
+      document.getElementById('addPermitBtn').addEventListener('click', function() {
+        addNewTabBtn.click();
+      });
+
+      document.getElementById('editPermitBtn').addEventListener('click', function() {
+        step2Actions.classList.add('d-none');
+        step1Actions.classList.remove('d-none');
+        saveCurrentFormDataToTab();
+      });
+
+      document.getElementById('printNoticeBtn').addEventListener('click', function() {
+        const formData = new FormData(tripForm);
+        const dataObj = {};
+
+        formData.forEach((value, key) => {
+          dataObj[key] = value;
+        });
+
+        const selectedCompany = companyNameSelect.value;
+        const companyDetails = companiesStore[selectedCompany] || {};
+
+        dataObj['company_license'] = companyDetails.license || '';
+        dataObj['negotiator_name'] = companyDetails.negotiatorName || '';
+        dataObj['negotiator_id'] = companyDetails.negotiatorNationalId || '';
+
+        if (fromLocationSelect.value === 'مرسى علم') {
+          dataObj['trip_type'] = dataObj['trip_type'] + ' - مرسى علم';
+        }
+
+        localStorage.setItem('tripFormData', JSON.stringify(dataObj));
+        window.open('htmlAkhtar.html', '_blank');
+      });
+
+      document.getElementById('printListBtn').addEventListener('click', function() {
+        const passengerRows = tableBody.querySelectorAll('tr');
+        const passengersData = [];
+
+        passengerRows.forEach((row, index) => {
+          const name = row.querySelector('input[name="passenger_name[]"]')?.value || '';
+          const nationality = row.querySelector('input[name="passenger_nationality[]"]')?.value || '';
+          const hotel = row.querySelector('input[name="hotel_name[]"]')?.value || '';
+          const room = row.querySelector('input[name="room_number[]"]')?.value || '';
+          const price = row.querySelector('input[name="passenger_price[]"]')?.value || '';
+
+          passengersData.push({
+            no: index + 1,
+            name: name,
+            nationality: nationality,
+            hotel: hotel,
+            room: room,
+            price: price,
+            t_no: ''
+          });
+        });
+
+        localStorage.setItem('passengersList', JSON.stringify(passengersData));
+        window.open('htmlTourists.html', '_blank');
+      });
+
+      initTabs();
+    });
+  </script>
+</body>
+</html>

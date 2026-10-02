@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إعدادات العربيات المسجلة - African Express Travel</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+    :root {
+      --bg-warm: #F7F4EF;
+      --card-bg: #FFFFFF;
+      --text-main: #2C2523;
+      --border-subtle: #E8E2D9;
+      --primary-accent: #D96B43;        /* برتقالي دافئ من اللوجو */
+      --primary-accent-hover: #C25832;
+      --secondary-accent: #5A4238;      /* بني داكن مريح للعين */
+      --secondary-accent-hover: #45322A;
+      --header-bg: #FAF6F0;
+    }
+
+    body {
+      background-color: var(--bg-warm) !important;
+      color: var(--text-main);
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.6;
+    }
+
+    .main-container {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .page-title {
+      color: var(--secondary-accent);
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--secondary-accent);
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text-main);
+      background-color: #FAFAFA;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background-color: #FFFFFF;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 0 0.25rem rgba(217, 107, 67, 0.15);
+    }
+
+    /* الأزرار الهيدر والتحكم */
+    .btn-custom-orange {
+      background-color: var(--primary-accent);
+      color: #FFFFFF;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-custom-orange:hover {
+      background-color: var(--primary-accent-hover);
+      color: #FFFFFF;
+    }
+
+    .btn-outline-custom-brown {
+      color: var(--secondary-accent);
+      border: 1.5px solid var(--secondary-accent);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-outline-custom-brown:hover {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    /* تصميم الجدول */
+    .table-custom {
+      border-color: var(--border-subtle);
+    }
+
+    .table-custom thead {
+      background-color: var(--secondary-accent) !important;
+      color: #FFFFFF;
+    }
+
+    .table-custom th {
+      font-weight: 600;
+      padding: 12px;
+      border-bottom: none;
+    }
+
+    .table-custom td {
+      padding: 10px;
+    }
+
+    /* الـ Modal Custom Styling */
+    .modal-content {
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+
+    .modal-header-custom {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    .btn-secondary-custom {
+      background-color: #716058;
+      border: none;
+      color: #FFFFFF;
+    }
+
+    .btn-secondary-custom:hover {
+      background-color: #5A4238;
+      color: #FFFFFF;
+    }
+  </style>
+</head>
+<body class="p-3 p-md-4">
+
+  <div class="container-fluid main-container p-4 rounded">
+    <!-- الهيدر أزرار الرجوع والتوجيه -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border-subtle) !important;">
+      <h3 class="mb-0 fw-bold page-title">🚗 إعدادات العربيات المسجلة</h3>
+      <div>
+        <button class="btn btn-custom-orange me-2" data-bs-toggle="modal" data-bs-target="#carModal" onclick="resetForm()">+ إضافة سيارة جديدة</button>
+        <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←</a>
+      </div>
+    </div>
+
+    <!-- شريط البحث وفلتر الشركة -->
+    <div class="row mb-3 g-3">
+      <div class="col-md-5">
+        <label class="form-label fw-bold">بحث عام:</label>
+        <input type="text" id="searchInput" class="form-control" placeholder="بحث برقم أو اسم العربية أو السائق...">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-bold">الشركة:</label>
+        <select id="companyFilter" class="form-select">
+          <option value="">جميع الشركات</option>
+          <option value="افريكان اكسبريس">افريكان اكسبريس</option>
+          <option value="أي ديال تورز">أي ديال تورز</option>
+          <option value="فوياج">فوياج</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- جدول عرض السيارات -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover text-center align-middle table-custom" id="carsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الشركة</th>
+            <th>نوع العربية</th>
+            <th>اسم العربية</th>
+            <th>لوحة العربية</th>
+            <th>رقم اللوحة</th>
+            <th>رقم الشاسيه</th>
+            <th>اسم السواق</th>
+            <th>رقم السواق</th>
+            <th>اسم سواق الاحتياط</th>
+            <th>رقم سواق الاحتياط</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="carsTableBody">
+          <!-- يتم إدراج السيارات هنا ديناميكياً -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal إضافة / تعديل سيارة -->
+  <div class="modal fade" id="carModal" tabindex="-1" aria-labelledby="carModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title fw-bold" id="carModalLabel">إضافة سيارة جديدة</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="carForm">
+            <input type="hidden" id="carIndex">
+            
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">الشركة <span class="text-danger">*</span></label>
+                <select class="form-select" id="modalCompany" required>
+                  <option value="افريكان اكسبريس">افريكان اكسبريس</option>
+                  <option value="أي ديال تورز">أي ديال تورز</option>
+                  <option value="فوياج">فوياج</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">نوع العربية <span class="text-danger">*</span></label>
+                <select class="form-select" id="modalCarType" required>
+                  <option value="" selected disabled>اختر نوع العربية</option>
+                  <option value="ليموزين">ليموزين</option>
+                  <option value="ميكروباص">ميكروباص</option>
+                  <option value="كوستر">كوستر</option>
+                  <option value="اوتوبيس">اوتوبيس</option>
+                  <option value="ميني باص">ميني باص</option>
+                  <option value="هاي اس">هاي اس</option>
+                  <option value="دفع رباعي">دفع رباعي</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">اسم العربية</label>
+                <input type="text" class="form-control" id="modalCarName" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">لوحة العربية</label>
+                <input type="text" class="form-control" id="modalCarPlate" placeholder="مثال: أ ب ج" required>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">رقم اللوحة</label>
+                <input type="text" class="form-control" id="modalCarNumber" placeholder="مثال: 1234" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">رقم الشاسيه</label>
+                <input type="text" class="form-control" id="modalChassisNumber">
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">اسم السواق</label>
+                <input type="text" class="form-control" id="modalDriverName" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">رقم السواق</label>
+                <input type="text" class="form-control" id="modalDriverPhone" required>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">اسم سواق الاحتياط</label>
+                <input type="text" class="form-control" id="modalBackupDriverName">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">رقم سواق الاحتياط</label>
+                <input type="text" class="form-control" id="modalBackupDriverPhone">
+              </div>
+            </div>
+
+            <div class="modal-footer px-0 pb-0 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+              <button type="button" class="btn btn-secondary-custom px-4" data-bs-dismiss="modal">إلغاء</button>
+              <button type="submit" class="btn btn-custom-orange px-4" id="saveModalBtn">حفظ البيانات</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // البيانات المبدئية المسجلة داخل الكود
+    const defaultCars = [
+      {
+        company: "افريكان اكسبريس",
+        carType: "هاي اس",
+        carName: "تويوتا هيس",
+        carPlate: "أ ب ج",
+        carNumber: "1234",
+        chassisNumber: "CH987654321",
+        driverName: "أحمد علي",
+        driverPhone: "01000000000",
+        backupDriverName: "محمود حسن",
+        backupDriverPhone: "01100000000"
+      }
+    ];
+
+    let cars = JSON.parse(localStorage.getItem('registeredCars')) || defaultCars;
+    const carModal = new bootstrap.Modal(document.getElementById('carModal'));
+
+    function renderTable() {
+      const tbody = document.getElementById('carsTableBody');
+      tbody.innerHTML = '';
+
+      const filterText = document.getElementById('searchInput').value.toLowerCase();
+      const selectedCompany = document.getElementById('companyFilter').value;
+
+      let visibleIndex = 1;
+
+      cars.forEach((car, index) => {
+        // فلترة بالشركة
+        if (selectedCompany && car.company !== selectedCompany) return;
+
+        // فلترة بالبحث النصي
+        const matches = 
+          (car.company && car.company.toLowerCase().includes(filterText)) ||
+          (car.carType && car.carType.toLowerCase().includes(filterText)) ||
+          car.carName.toLowerCase().includes(filterText) ||
+          car.carNumber.toLowerCase().includes(filterText) ||
+          car.driverName.toLowerCase().includes(filterText) ||
+          car.carPlate.toLowerCase().includes(filterText);
+
+        if (!matches) return;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${visibleIndex++}</td>
+          <td><span class="badge bg-secondary">${car.company || 'غير محدد'}</span></td>
+          <td><span class="badge bg-info text-dark">${car.carType || 'غير محدد'}</span></td>
+          <td>${car.carName}</td>
+          <td>${car.carPlate}</td>
+          <td>${car.carNumber}</td>
+          <td>${car.chassisNumber || '-'}</td>
+          <td>${car.driverName}</td>
+          <td>${car.driverPhone}</td>
+          <td>${car.backupDriverName || '-'}</td>
+          <td>${car.backupDriverPhone || '-'}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning me-1 fw-bold" onclick="editCar(${index})">تعديل</button>
+            <button class="btn btn-sm btn-outline-danger fw-bold" onclick="deleteCar(${index})">حذف</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // حفظ الـ State في LocalStorage للربط بين الصفحات
+      localStorage.setItem('registeredCars', JSON.stringify(cars));
+    }
+
+    // إضافة أو تعديل سيارة
+    document.getElementById('carForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const index = document.getElementById('carIndex').value;
+      const carData = {
+        company: document.getElementById('modalCompany').value,
+        carType: document.getElementById('modalCarType').value,
+        carName: document.getElementById('modalCarName').value,
+        carPlate: document.getElementById('modalCarPlate').value,
+        carNumber: document.getElementById('modalCarNumber').value,
+        chassisNumber: document.getElementById('modalChassisNumber').value,
+        driverName: document.getElementById('modalDriverName').value,
+        driverPhone: document.getElementById('modalDriverPhone').value,
+        backupDriverName: document.getElementById('modalBackupDriverName').value,
+        backupDriverPhone: document.getElementById('modalBackupDriverPhone').value
+      };
+
+      if (index === '') {
+        cars.push(carData);
+      } else {
+        cars[index] = carData;
+      }
+
+      renderTable();
+      carModal.hide();
+    });
+
+    // تفريغ النموذج
+    function resetForm() {
+      document.getElementById('carForm').reset();
+      document.getElementById('carIndex').value = '';
+      document.getElementById('modalCarType').value = '';
+      document.getElementById('carModalLabel').innerText = 'إضافة سيارة جديدة';
+    }
+
+    // فتح زر التعديل
+    function editCar(index) {
+      const car = cars[index];
+      document.getElementById('carIndex').value = index;
+      document.getElementById('modalCompany').value = car.company || 'افريكان اكسبريس';
+      document.getElementById('modalCarType').value = car.carType || '';
+      document.getElementById('modalCarName').value = car.carName;
+      document.getElementById('modalCarPlate').value = car.carPlate;
+      document.getElementById('modalCarNumber').value = car.carNumber;
+      document.getElementById('modalChassisNumber').value = car.chassisNumber;
+      document.getElementById('modalDriverName').value = car.driverName;
+      document.getElementById('modalDriverPhone').value = car.driverPhone;
+      document.getElementById('modalBackupDriverName').value = car.backupDriverName;
+      document.getElementById('modalBackupDriverPhone').value = car.backupDriverPhone;
+
+      document.getElementById('carModalLabel').innerText = 'تعديل بيانات السيارة';
+      carModal.show();
+    }
+
+    // حذف سيارة
+    function deleteCar(index) {
+      if (confirm('هل أنت تأكد من إزالة هذه السيارة من القائمة؟')) {
+        cars.splice(index, 1);
+        renderTable();
+      }
+    }
+
+    // أحداث الفلترة
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+    document.getElementById('companyFilter').addEventListener('change', renderTable);
+
+    // التهيئة البدائية
+    renderTable();
+  </script>
+</body>
+</html>
