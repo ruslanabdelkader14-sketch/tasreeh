@@ -949,6 +949,82 @@
         box.textContent = msg;
       }
 
+      // =========================================================
+      // 📝 إرسال بيانات الرحلة لفورم جوجل (تسجيل الوزارة)
+      // =========================================================
+      const GOOGLE_FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLScSHU-SGwRzD06BtRkS-WxwS-G6JWrm37CrU2WYC__sAncfKA/formResponse';
+
+      const PAGE_HISTORY_BY_CAR = {
+        'اوتوبيس': '0,1,6', 'كوستر': '0,2,6', 'ميني باص': '0,3,6',
+        'ميكروباص': '0,4,6', 'هاي اس': '0,4,6',
+        'ليموزين': '0,5,6', 'دفع رباعي': '0,5,6'
+      };
+      const CAR_TYPE_MAP = {
+        'اوتوبيس': 'اتوبيس سياحي', 'كوستر': 'كوستر', 'ميني باص': 'ميني باص',
+        'ميكروباص': 'ميكروباص', 'هاي اس': 'هاي اس', 'ليموزين': 'ليموزين', 'دفع رباعي': 'دفع رباعي'
+      };
+      const PAX_ENTRY_BY_CAR = {
+        'اوتوبيس': 'entry.1177081991', 'كوستر': 'entry.1113687347', 'ميني باص': 'entry.1881561870',
+        'ميكروباص': 'entry.431788748', 'هاي اس': 'entry.431788748',
+        'ليموزين': 'entry.1439378422', 'دفع رباعي': 'entry.1439378422'
+      };
+      const FIXED_NATIONALITY = 'ألمانيا';
+      const FIXED_APPLICANT_ROLE = 'مندوب سياحة خارجية';
+
+      function toEnDigits(s) {
+        return String(s || '')
+          .replace(/[٠-٩]/g, c => c.charCodeAt(0) - 0x0660)
+          .replace(/[۰-۹]/g, c => c.charCodeAt(0) - 0x06F0);
+      }
+
+      function buildGoogleFormBody(d) {
+        const body = new URLSearchParams();
+        const add = (entry, v) => { if (entry && v !== undefined && v !== null && v !== '') body.append(entry, v); };
+
+        const carType = d.car_type || '';
+        const license = toEnDigits(d.company_license).replace(/\D/g, '');
+        const pax = toEnDigits(d.pax_count || '1');
+
+        add('entry.1748033039', d.from_location);                    // بداية الرحلة
+        add('entry.1485870053', d.to_location);                      // الوجهة
+        add('entry.1757055921', d.company_name);                     // الشركة المنفذة
+        add('entry.1599411303', license);                            // ترخيص المنفذة
+        add('entry.1484896930', (d.car_name || '').trim());          // الشركة الناقلة = اسم العربية
+        add('entry.1829075331', license);                            // ترخيص الناقلة
+        add('entry.458600585', CAR_TYPE_MAP[carType] || carType);    // نوع المركبة
+        add(PAX_ENTRY_BY_CAR[carType], pax);                         // عدد الركاب حسب نوع العربية
+
+        const plateLetters = (d.car_plate || '').replace(/[\d\s\-\/\.]+/g, '').split('').join(' ');
+        add('entry.100837855', plateLetters);
+        add('entry.1699758489', toEnDigits(d.car_number).replace(/\D/g, ''));
+        add('entry.342115608', toEnDigits(d.chassis_number).replace(/\s+/g, ''));
+
+        add('entry.1971436968', FIXED_NATIONALITY);                  // الجنسية
+        add('entry.1253472782', toEnDigits(d.driver_phone).replace(/\D/g, '')); // واتساب السائق
+        add('entry.2118850643', FIXED_APPLICANT_ROLE);               // الصفة
+
+        if (PAGE_HISTORY_BY_CAR[carType]) body.append('pageHistory', PAGE_HISTORY_BY_CAR[carType]);
+        return body;
+      }
+
+      // يرجّع true عند الإرسال، أو نص رسالة الخطأ
+      async function sendToGoogleForm(d) {
+        const phone = toEnDigits(d.driver_phone).replace(/\D/g, '');
+        if (phone.length > 0 && phone.length < 10) return '⚠ رقم السائق غير مكتمل، لم يُرسل للفورم';
+        try {
+          await fetch(GOOGLE_FORM_ACTION, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: buildGoogleFormBody(d)
+          });
+          return true;
+        } catch (err) {
+          console.error(err);
+          return '❌ تعذر الإرسال للفورم، تأكد من الإنترنت';
+        }
+      }
+
       saveBtn.addEventListener('click', async function() {
         if (!tripForm.checkValidity()) {
           tripForm.reportValidity();
@@ -962,7 +1038,21 @@
         savePermitLocally(d, tab);
         saveCarIfNew(d);
 
-        // الإرسال للشيت: بيانات الرحلة فقط - بدون أي بيانات مسافرين
+        saveBtn.disabled = true;
+        const msgs = [];
+        let level = 'success';
+
+        // 1) فورم جوجل (تسجيل الوزارة)
+        if (!tab.formSubmitted || confirm('التصريح ده اتسجل قبل كده في الفورم. تسجله تاني؟')) {
+          showStatus('جاري إرسال البيانات...', 'info');
+          const r = await sendToGoogleForm(d);
+          if (r === true) { tab.formSubmitted = true; msgs.push('✔ تم التسجيل في فورم جوجل'); }
+          else { level = 'warning'; msgs.push(r); }
+        } else {
+          msgs.push('تم تخطي الفورم (مسجل من قبل)');
+        }
+
+        // 2) الشيت (بيانات الرحلة فقط - بدون مسافرين)
         const sheetFields = ['company_name','client_name','trip_type','from_location','to_location','trip_date',
           'nationality','pax_count','car_type','car_name','car_plate','car_number','chassis_number',
           'guide_name','guide_phone','driver_name','driver_phone','backup_driver_name','backup_driver_phone',
@@ -971,14 +1061,15 @@
         params.append('action', 'addTrip');
         params.append('trip_id', tab.id);
         sheetFields.forEach(k => params.append(k, d[k] || ''));
-
-        saveBtn.disabled = true;
         try {
           await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: params });
-          showStatus('✔ تم الحفظ وإرسال بيانات الرحلة للشيت', 'success');
+          msgs.push('✔ تم إرسال بيانات الرحلة للشيت');
         } catch (err) {
-          showStatus('⚠ تم الحفظ على الجهاز، لكن تعذر الإرسال للشيت (تأكد من الإنترنت)', 'warning');
+          level = 'warning';
+          msgs.push('⚠ تعذر الإرسال للشيت');
         }
+
+        showStatus(msgs.join(' | '), level);
         saveBtn.disabled = false;
 
         step1Actions.classList.add('d-none');
