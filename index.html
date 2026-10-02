@@ -548,7 +548,35 @@
 
     const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+    // جلب السيارات المسجلة تلقائياً من شيت جوجل وتحديث الـ localStorage
+    async function loadRegisteredCarsFromSheet() {
+      try {
+        const response = await fetch(GOOGLE_APP_SCRIPT_URL);
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const cars = data.map(item => ({
+            company: item.company_name || '',
+            carType: item.car_type || '',
+            carName: item.car_name || '',
+            carPlate: item.car_plate || '',
+            carNumber: item.car_number || '',
+            chassisNumber: item.chassis_number || '',
+            driverName: item.driver_name || '',
+            driverPhone: item.driver_phone || '',
+            backupDriverName: item.backup_driver_name || '',
+            backupDriverPhone: item.backup_driver_phone || ''
+          }));
+          localStorage.setItem('registeredCars', JSON.stringify(cars));
+        }
+      } catch (err) {
+        console.error('خطأ في جلب العربيات المسجلة من الشيت:', err);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      // جلب أحدث بيانات السيارات من شيت جوجل فور التحميل
+      loadRegisteredCarsFromSheet();
+
       const addPassengerBtn = document.getElementById('addPassengerBtn');
       const tableBody = document.querySelector('#passengersTable tbody');
       const paxCountInput = document.getElementById('paxCountInput');
