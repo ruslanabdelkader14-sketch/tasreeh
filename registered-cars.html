@@ -278,24 +278,49 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // البيانات المبدئية المسجلة داخل الكود
-    const defaultCars = [
-      {
-        company: "افريكان اكسبريس",
-        carType: "هاي اس",
-        carName: "تويوتا هيس",
-        carPlate: "أ ب ج",
-        carNumber: "1234",
-        chassisNumber: "CH987654321",
-        driverName: "أحمد علي",
-        driverPhone: "01000000000",
-        backupDriverName: "محمود حسن",
-        backupDriverPhone: "01100000000"
-      }
-    ];
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec';
 
-    let cars = JSON.parse(localStorage.getItem('registeredCars')) || defaultCars;
+    let cars = JSON.parse(localStorage.getItem('registeredCars')) || [];
     const carModal = new bootstrap.Modal(document.getElementById('carModal'));
+
+    // دالة جلب وقراءة البيانات من Google Sheets
+    async function fetchCarsFromSheet() {
+      const tbody = document.getElementById('carsTableBody');
+      tbody.innerHTML = '<tr><td colspan="12" class="text-center fw-bold py-4 text-muted">جاري تحميل البيانات من شيت جوجل... ⏳</td></tr>';
+
+      try {
+        const response = await fetch(SCRIPT_URL);
+        const data = await response.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          cars = data.map(item => ({
+            company: item.company_name || '',
+            carType: item.car_type || '',
+            carName: item.car_name || '',
+            carPlate: item.car_plate || '',
+            carNumber: item.car_number || '',
+            chassisNumber: item.chassis_number || '',
+            driverName: item.driver_name || '',
+            driverPhone: item.driver_phone || '',
+            backupDriverName: item.backup_driver_name || '',
+            backupDriverPhone: item.backup_driver_phone || ''
+          }));
+          localStorage.setItem('registeredCars', JSON.stringify(cars));
+          renderTable();
+        } else if (cars.length > 0) {
+          renderTable();
+        } else {
+          tbody.innerHTML = '<tr><td colspan="12" class="text-center fw-bold py-4 text-muted">لا توجد بيانات مسجلة حالياً.</td></tr>';
+        }
+      } catch (error) {
+        console.error('حدث خطأ أثناء جلب البيانات:', error);
+        if (cars.length > 0) {
+          renderTable();
+        } else {
+          tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger py-4 fw-bold">تعذر تحميل البيانات من جوجل شيت. تحقق من الاتصال بالإنترنت.</td></tr>';
+        }
+      }
+    }
 
     function renderTable() {
       const tbody = document.getElementById('carsTableBody');
@@ -314,10 +339,10 @@
         const matches = 
           (car.company && car.company.toLowerCase().includes(filterText)) ||
           (car.carType && car.carType.toLowerCase().includes(filterText)) ||
-          car.carName.toLowerCase().includes(filterText) ||
-          car.carNumber.toLowerCase().includes(filterText) ||
-          car.driverName.toLowerCase().includes(filterText) ||
-          car.carPlate.toLowerCase().includes(filterText);
+          (car.carName && car.carName.toLowerCase().includes(filterText)) ||
+          (car.carNumber && car.carNumber.toString().toLowerCase().includes(filterText)) ||
+          (car.driverName && car.driverName.toLowerCase().includes(filterText)) ||
+          (car.carPlate && car.carPlate.toLowerCase().includes(filterText));
 
         if (!matches) return;
 
@@ -326,12 +351,12 @@
           <td>${visibleIndex++}</td>
           <td><span class="badge bg-secondary">${car.company || 'غير محدد'}</span></td>
           <td><span class="badge bg-info text-dark">${car.carType || 'غير محدد'}</span></td>
-          <td>${car.carName}</td>
-          <td>${car.carPlate}</td>
-          <td>${car.carNumber}</td>
+          <td>${car.carName || '-'}</td>
+          <td>${car.carPlate || '-'}</td>
+          <td>${car.carNumber || '-'}</td>
           <td>${car.chassisNumber || '-'}</td>
-          <td>${car.driverName}</td>
-          <td>${car.driverPhone}</td>
+          <td>${car.driverName || '-'}</td>
+          <td>${car.driverPhone || '-'}</td>
           <td>${car.backupDriverName || '-'}</td>
           <td>${car.backupDriverPhone || '-'}</td>
           <td>
@@ -342,7 +367,10 @@
         tbody.appendChild(tr);
       });
 
-      // حفظ الـ State في LocalStorage للربط بين الصفحات
+      if (visibleIndex === 1 && cars.length > 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center py-3 text-muted">لا توجد نتائج تطابق البحث.</td></tr>';
+      }
+
       localStorage.setItem('registeredCars', JSON.stringify(cars));
     }
 
@@ -388,14 +416,14 @@
       document.getElementById('carIndex').value = index;
       document.getElementById('modalCompany').value = car.company || 'افريكان اكسبريس';
       document.getElementById('modalCarType').value = car.carType || '';
-      document.getElementById('modalCarName').value = car.carName;
-      document.getElementById('modalCarPlate').value = car.carPlate;
-      document.getElementById('modalCarNumber').value = car.carNumber;
-      document.getElementById('modalChassisNumber').value = car.chassisNumber;
-      document.getElementById('modalDriverName').value = car.driverName;
-      document.getElementById('modalDriverPhone').value = car.driverPhone;
-      document.getElementById('modalBackupDriverName').value = car.backupDriverName;
-      document.getElementById('modalBackupDriverPhone').value = car.backupDriverPhone;
+      document.getElementById('modalCarName').value = car.carName || '';
+      document.getElementById('modalCarPlate').value = car.carPlate || '';
+      document.getElementById('modalCarNumber').value = car.carNumber || '';
+      document.getElementById('modalChassisNumber').value = car.chassisNumber || '';
+      document.getElementById('modalDriverName').value = car.driverName || '';
+      document.getElementById('modalDriverPhone').value = car.driverPhone || '';
+      document.getElementById('modalBackupDriverName').value = car.backupDriverName || '';
+      document.getElementById('modalBackupDriverPhone').value = car.backupDriverPhone || '';
 
       document.getElementById('carModalLabel').innerText = 'تعديل بيانات السيارة';
       carModal.show();
@@ -403,7 +431,7 @@
 
     // حذف سيارة
     function deleteCar(index) {
-      if (confirm('هل أنت تأكد من إزالة هذه السيارة من القائمة؟')) {
+      if (confirm('هل أنت متأكد من إزالة هذه السيارة من القائمة؟')) {
         cars.splice(index, 1);
         renderTable();
       }
@@ -413,8 +441,8 @@
     document.getElementById('searchInput').addEventListener('input', renderTable);
     document.getElementById('companyFilter').addEventListener('change', renderTable);
 
-    // التهيئة البدائية
-    renderTable();
+    // التحميل الأول للبيانات من شيت جوجل
+    fetchCarsFromSheet();
   </script>
 </body>
 </html>
