@@ -858,7 +858,6 @@
 
         carSearchInput.addEventListener('input', function() {
           const query = this.value.trim().toLowerCase();
-          const selectedCompany = companyNameSelect.value;
 
           if (query === '') {
             suggestionsBox.classList.add('d-none');
@@ -869,14 +868,17 @@
           const registeredCars = JSON.parse(localStorage.getItem('registeredCars')) || defaultCarsData;
 
           const matchedCars = registeredCars.filter(car => {
-            const matchCompany = !car.company || car.company === selectedCompany;
-            const matchQuery = 
-              (car.carNumber && car.carNumber.toLowerCase().includes(query)) ||
-              (car.carName && car.carName.toLowerCase().includes(query)) ||
-              (car.driverName && car.driverName.toLowerCase().includes(query)) ||
-              (car.carPlate && car.carPlate.toLowerCase().includes(query));
+            const carNum = String(car.carNumber || '').toLowerCase();
+            const carName = String(car.carName || '').toLowerCase();
+            const driverName = String(car.driverName || '').toLowerCase();
+            const carPlate = String(car.carPlate || '').toLowerCase();
+            const driverPhone = String(car.driverPhone || '').toLowerCase();
 
-            return matchCompany && matchQuery;
+            return carNum.includes(query) ||
+                   carName.includes(query) ||
+                   driverName.includes(query) ||
+                   carPlate.includes(query) ||
+                   driverPhone.includes(query);
           });
 
           if (matchedCars.length > 0) {
@@ -894,6 +896,10 @@
               `;
 
               item.addEventListener('click', function() {
+                if (car.company) {
+                  companyNameSelect.value = car.company;
+                  updateClientsList();
+                }
                 document.getElementById('car_type').value = car.carType || '';
                 document.getElementById('car_name').value = car.carName || '';
                 document.getElementById('car_plate').value = car.carPlate || '';
