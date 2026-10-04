@@ -872,7 +872,6 @@
 </div>
 
 <!-- ==================== SCRIPT FOR AUTO-FILLING ALL 3 PAGES ==================== -->
-<!-- ==================== SCRIPT FOR AUTO-FILLING ALL 3 PAGES ==================== -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const dataRaw = localStorage.getItem('tripFormData');
@@ -928,7 +927,7 @@
       }
     } else if (data.to_location === 'الأقصر' || data.to_location === 'الاقصر') {
       if (data.trip_type === 'توصيلة') {
-        baseProgram = "رست الزعفرانة +";
+        baseProgram = "رست 85 +";
       } else {
         baseProgram = "رست 85 – دندره -+كرنك+حتشبسوت+ملوك+ملكات+محلات+جزيره+جولة نيل+مرسي اهالي+غداء +";
       }
@@ -985,7 +984,10 @@
     // جلب موعد الذهاب أو تعيين "6 ص" كقيمة افتراضية إذا كانت فارغة
     const depTimeInput = (data.departure_time || '').trim();
     const depTimeVal = depTimeInput ? depTimeInput : '6 ص';
-    const retTimeVal = '17 م'; // الموعد الافتراضي للعودة
+    
+    // التحقق مما إذا كانت نوع الرحلة "توصيلة"
+    const isTransfer = (data.trip_type || '').trim() === 'توصيلة';
+    const retTimeVal = isTransfer ? '....... : .......' : '18'; // أو '17 م' حسب ما ترغب في باقي الرحلات
 
     // دالة لتعبئة المواعيد في الجداول حسب الاتجاه
     const setTimeText = (rightDep, rightRet, leftDep, leftRet) => {
