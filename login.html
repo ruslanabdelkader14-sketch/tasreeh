@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>تسجيل الدخول - African Express Travel</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap">
+  <style>
+    :root {
+      --bg: #F7F4EF; --card: #fff; --text: #2C2523; --muted: #6C635F;
+      --line: #E8E2D9; --accent: #D96B43; --accent-hover: #C25832; --brown: #5A4238;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; line-height: 1.6;
+      display: grid; place-items: center; padding: 16px;
+    }
+    .card {
+      width: 100%; max-width: 400px; background: var(--card);
+      border: 1px solid var(--line); border-top: 4px solid var(--accent);
+      border-radius: 14px; padding: 32px 28px; box-shadow: 0 8px 30px rgba(0,0,0,.05);
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; color: var(--brown); }
+    .sub { margin: 0 0 24px; color: var(--muted); font-size: .9rem; }
+    label { display: block; margin: 0 0 6px; font-weight: 600; font-size: .9rem; color: var(--brown); }
+    .field { margin-bottom: 18px; }
+    input {
+      width: 100%; padding: 11px 14px; font: inherit; color: var(--text);
+      background: #FAFAFA; border: 1.5px solid var(--line); border-radius: 8px;
+    }
+    input:focus { outline: none; background: #fff; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(217,107,67,.15); }
+    .pw { position: relative; }
+    .pw input { padding-inline-end: 64px; }
+    .toggle {
+      position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%);
+      border: 0; background: none; color: var(--brown); font: inherit; font-size: .85rem;
+      font-weight: 600; padding: 6px 8px; border-radius: 6px; cursor: pointer;
+    }
+    .toggle:hover { background: #F1EBE2; }
+    .toggle:focus-visible, button.go:focus-visible { outline: 3px solid var(--brown); outline-offset: 2px; }
+    button.go {
+      width: 100%; padding: 12px; border: 0; border-radius: 10px; cursor: pointer;
+      background: var(--accent); color: #fff; font: inherit; font-weight: 700; font-size: 1rem;
+      transition: background .2s;
+    }
+    button.go:hover { background: var(--accent-hover); }
+    button.go:disabled { opacity: .6; cursor: wait; }
+    .err {
+      min-height: 1.5em; margin: 0 0 14px; color: #B3261E; font-size: .9rem; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>تسجيل الدخول</h1>
+    <p class="sub">African Express Travel</p>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="username">اسم المستخدم</label>
+        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </div>
+      <div class="field">
+        <label for="password">كلمة المرور</label>
+        <div class="pw">
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button type="button" class="toggle" id="toggle" aria-controls="password">إظهار</button>
+        </div>
+      </div>
+      <p class="err" id="err" role="alert" aria-live="polite"></p>
+      <button class="go" id="go" type="submit">دخول</button>
+    </form>
+  </main>
+
+  <script>
+    // ===== الإعدادات =====
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec';   // رابط Apps Script (ينتهي بـ /exec)
+    const NEXT_PAGE  = 'index.html';                    // الصفحة بعد الدخول
+    const APP_SALT   = 'aet-login-v1';                  // نص ثابت (غير سري) - لازم يفضل ثابت بعد إنشاء المستخدمين
+    const ITERATIONS = 210000;                          // عدد دورات PBKDF2
+
+    const MSGS = {
+      invalid: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+      locked:  'تم إيقاف المحاولات مؤقتًا. جرّب بعد 15 دقيقة',
+      network: 'تعذر الاتصال بالخادم. تأكد من الإنترنت وحاول تاني'
+    };
+
+    // تشفير كلمة المرور في المتصفح (PBKDF2-SHA256). كلمة المرور الأصلية لا تغادر الجهاز.
+    // متاحة من الكونسول أيضًا لإنشاء مستخدمين: await derive('ali', 'pass')
+    async function derive(username, password) {
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey('raw', enc.encode(password.normalize('NFKC')), 'PBKDF2', false, ['deriveBits']);
+      const bits = await crypto.subtle.deriveBits({
+        name: 'PBKDF2', hash: 'SHA-256', iterations: ITERATIONS,
+        salt: enc.encode(APP_SALT + ':' + username.trim().toLowerCase())
+      }, key, 256);
+      return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    const $ = id => document.getElementById(id);
+    const setError = t => { $('err').textContent = t; };
+    const call = body => fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }).then(r => r.json());
+
+    $('toggle').addEventListener('click', () => {
+      const show = $('password').type === 'password';
+      $('password').type = show ? 'text' : 'password';
+      $('toggle').textContent = show ? 'إخفاء' : 'إظهار';
+    });
+
+    $('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      setError('');
+      const username = $('username').value.trim();
+      const password = $('password').value;
+      if (!username || !password) return setError('اكتب اسم المستخدم وكلمة المرور');
+      if (!window.crypto || !crypto.subtle) return setError('المتصفح لا يدعم التشفير. افتح الصفحة عبر HTTPS');
+
+      $('go').disabled = true;
+      $('go').textContent = 'جاري التحقق...';
+      try {
+        const hash = await derive(username, password);
+        $('password').value = '';
+        const data = await call({ action: 'login', username, hash });
+        if (data.ok) {
+          sessionStorage.setItem('session', JSON.stringify({ token: data.token, role: data.role, name: data.name }));
+          location.replace(NEXT_PAGE);
+          return;
+        }
+        setError(MSGS[data.error] || MSGS.invalid);
+      } catch (_) {
+        setError(MSGS.network);
+      }
+      $('go').disabled = false;
+      $('go').textContent = 'دخول';
+    });
+
+    // لو فيه جلسة سارية، ادخل مباشرة
+    (async () => {
+      try {
+        const s = JSON.parse(sessionStorage.getItem('session') || 'null');
+        if (!s || SCRIPT_URL.startsWith('PASTE')) return;
+        const r = await call({ action: 'verify', token: s.token });
+        if (r.ok) location.replace(NEXT_PAGE); else sessionStorage.removeItem('session');
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>
