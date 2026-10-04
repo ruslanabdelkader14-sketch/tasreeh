@@ -531,6 +531,11 @@
   <script>
     const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec';
 
+    // 🔒 حماية الصفحة: لازم جلسة دخول سارية
+    const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
+    if (!SESSION) location.replace('login.html');
+    function authFail() { sessionStorage.removeItem('session'); location.replace('login.html'); }
+
     const defaultCarsData = [
       {
         company: "افريكان اكسبريس",
@@ -551,8 +556,9 @@
     // جلب السيارات المسجلة تلقائياً من شيت جوجل وتحديث الـ localStorage
     async function loadRegisteredCarsFromSheet() {
       try {
-        const response = await fetch(GOOGLE_APP_SCRIPT_URL);
+        const response = await fetch(GOOGLE_APP_SCRIPT_URL + '?token=' + encodeURIComponent(SESSION.token));
         const data = await response.json();
+        if (data && data.error === 'expired') return authFail();
         if (Array.isArray(data) && data.length > 0) {
           const cars = data.map(item => ({
             company: item.company_name || '',
@@ -1094,9 +1100,13 @@
         const params = new URLSearchParams();
         params.append('action', 'addTrip');
         params.append('trip_id', tab.id);
+        params.append('token', SESSION.token);
         sheetFields.forEach(k => params.append(k, d[k] || ''));
         try {
-          await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: params });
+          const res = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: params });
+          const j = await res.json();
+          if (j.error === 'expired') { authFail(); return; }
+          if (j.status !== 'success') throw new Error(j.message || 'save failed');
           msgs.push('✔ تم إرسال بيانات الرحلة للشيت');
         } catch (err) {
           level = 'warning';
