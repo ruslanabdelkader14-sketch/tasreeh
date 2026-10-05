@@ -1074,51 +1074,65 @@
         const d = buildTripData();
         const tab = tabsList.find(t => t.id === activeTabId);
 
+        // 1) حفظ محلي سريع وحفظ الحالة
         persistPrintData();
         savePermitLocally(d, tab);
         saveCarIfNew(d);
 
-        saveBtn.disabled = true;
-        const msgs = [];
-        let level = 'success';
+        // 2) إظهار الزراير فوراً بدون انتظار الشبكة
+        step1Actions.classList.add('d-none');
+        step2Actions.classList.remove('d-none');
+        saveCurrentFormDataToTab();
 
-        // 1) فورم جوجل (تسجيل الوزارة)
-        if (!tab.formSubmitted || confirm('التصريح ده اتسجل قبل كده في الفورم. تسجله تاني؟')) {
-          showStatus('جاري إرسال البيانات...', 'info');
-          const r = await sendToGoogleForm(d);
-          if (r === true) { tab.formSubmitted = true; msgs.push('✔ تم التسجيل في فورم جوجل'); }
-          else { level = 'warning'; msgs.push(r); }
-        } else {
-          msgs.push('تم تخطي الفورم (مسجل من قبل)');
-        }
+        showStatus('جاري تسجيل البيانات في الخلفية...', 'info');
 
-        // 2) الشيت (بيانات الرحلة فقط - بدون مسافرين)
+        // 3) تجهيز بيانات الشيت
         const sheetFields = ['company_name','client_name','trip_type','from_location','to_location','trip_date',
           'nationality','pax_count','car_type','car_name','car_plate','car_number','chassis_number',
           'guide_name','guide_phone','driver_name','driver_phone','backup_driver_name','backup_driver_phone',
           'program_details','departure_time'];
+        
         const params = new URLSearchParams();
         params.append('action', 'addTrip');
         params.append('trip_id', tab.id);
         params.append('token', SESSION.token);
         sheetFields.forEach(k => params.append(k, d[k] || ''));
-        try {
-          const res = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: params });
-          const j = await res.json();
-          if (j.error === 'expired') { authFail(); return; }
-          if (j.status !== 'success') throw new Error(j.message || 'save failed');
+
+        // 4) إرسال الطلبين بالتوازي (Parallel) في الخلفية
+        const formPromise = (!tab.formSubmitted || confirm('التصريح ده اتسجل قبل كده في الفورم. تسجله تاني؟')) 
+          ? sendToGoogleForm(d) 
+          : Promise.resolve('skipped');
+
+        const sheetPromise = fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: params })
+          .then(res => res.json())
+          .catch(err => ({ status: 'error', message: err }));
+
+        const [formRes, sheetRes] = await Promise.all([formPromise, sheetPromise]);
+
+        const msgs = [];
+        let level = 'success';
+
+        if (formRes === true) {
+          tab.formSubmitted = true;
+          msgs.push('✔ تم التسجيل في فورم جوجل');
+        } else if (formRes === 'skipped') {
+          msgs.push('تم تخطي الفورم (مسجل من قبل)');
+        } else {
+          level = 'warning';
+          msgs.push(formRes);
+        }
+
+        if (sheetRes && sheetRes.status === 'success') {
           msgs.push('✔ تم إرسال بيانات الرحلة للشيت');
-        } catch (err) {
+        } else if (sheetRes && sheetRes.error === 'expired') {
+          authFail();
+          return;
+        } else {
           level = 'warning';
           msgs.push('⚠ تعذر الإرسال للشيت');
         }
 
         showStatus(msgs.join(' | '), level);
-        saveBtn.disabled = false;
-
-        step1Actions.classList.add('d-none');
-        step2Actions.classList.remove('d-none');
-        saveCurrentFormDataToTab();
       });
 
       document.getElementById('printNoticeBtn').addEventListener('click', function() {
