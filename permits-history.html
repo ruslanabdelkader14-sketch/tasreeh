@@ -13,9 +13,9 @@
       --card-bg: #FFFFFF;
       --text-main: #2C2523;
       --border-subtle: #E8E2D9;
-      --primary-accent: #D96B43;        /* برتقالي دافئ من اللوجو */
+      --primary-accent: #D96B43;
       --primary-accent-hover: #C25832;
-      --secondary-accent: #5A4238;      /* بني داكن مريح للعين */
+      --secondary-accent: #5A4238;
       --secondary-accent-hover: #45322A;
       --header-bg: #FAF6F0;
     }
@@ -60,7 +60,6 @@
       box-shadow: 0 0 0 0.25rem rgba(217, 107, 67, 0.15);
     }
 
-    /* أزرار الهيدر والتحكم */
     .btn-outline-custom-brown {
       color: var(--secondary-accent);
       border: 1.5px solid var(--secondary-accent);
@@ -85,14 +84,12 @@
       color: #FFFFFF;
     }
 
-    /* القائمة المنسدلة للفلتر */
     .dropdown-menu-column-filter {
       min-width: 230px;
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
     }
 
-    /* تصميم الجدول */
     .table-custom {
       border-color: var(--border-subtle);
     }
@@ -112,7 +109,6 @@
       padding: 10px;
     }
 
-    /* صندوق الملخص السفلي */
     .summary-box {
       background-color: var(--header-bg) !important;
       border: 1.5px solid var(--border-subtle) !important;
@@ -127,13 +123,13 @@
 <body class="p-3 p-md-4">
 
   <div class="container-fluid main-container p-4 rounded">
-    <!-- الهيدر أزرار الرجوع والتوجيه -->
+    <!-- الهيدر -->
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border-subtle) !important;">
       <h3 class="mb-0 fw-bold page-title">📋 تصاريح آخر 72 ساعة</h3>
       <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←</a>
     </div>
 
-    <!-- أدوات التحكم: البحث، فلتر الشركة، فلتر التاريخ، وزر فلتر الأعمدة -->
+    <!-- أدوات التحكم والفلترة -->
     <div class="row mb-3 g-3 align-items-end justify-content-between">
       
       <!-- البحث النصي -->
@@ -154,7 +150,7 @@
         </select>
       </div>
 
-      <!-- فلتر تاريخ الرحلة (من وإلى) -->
+      <!-- فلتر التاريخ -->
       <div class="col-md-5">
         <div class="row g-2">
           <div class="col-6">
@@ -168,7 +164,7 @@
         </div>
       </div>
 
-      <!-- زر الفلتر لإظهار وإخفاء الأعمدة -->
+      <!-- فلتر الأعمدة -->
       <div class="col-md-auto">
         <div class="dropdown">
           <button class="btn btn-outline-custom-orange dropdown-toggle fw-bold" type="button" id="columnFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
@@ -227,7 +223,7 @@
 
     </div>
 
-    <!-- جدول تصاريح 72 ساعة -->
+    <!-- جدول البيانات -->
     <div class="table-responsive">
       <table class="table table-bordered table-hover text-center align-middle table-custom" id="permitsTable">
         <thead>
@@ -247,12 +243,12 @@
           </tr>
         </thead>
         <tbody id="permitsTableBody">
-          <!-- تُدرج التصاريح ديناميكياً هنا -->
+          <tr><td colspan="12" class="text-center">جاري تحميل البيانات من الشيت...</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- صندوق إجمالي الكوست وتفاصيل أعداد أنواع السيارات المعروضة -->
+    <!-- الملخص -->
     <div class="d-flex justify-content-between align-items-center mt-3 p-3 summary-box flex-wrap gap-2">
       <div class="fw-bold text-secondary">
         📊 أعداد السيارات المعروضة: <span id="carTypesCount" class="text-dark">ليموزين: 0 | ميكروباص: 0 | كوستر: 0 | اوتوبيس: 0</span>
@@ -265,11 +261,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const yesterdayStr = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec";
 
-    // جدول أسعار السيارات المعتمد للأنواع الأربعة فقط
     const carPrices = {
       "ليموزين": 250,
       "ميكروباص": 450,
@@ -277,44 +270,37 @@
       "اوتوبيس": 600
     };
 
-    const samplePermits = [
-      {
-        company_name: "افريكان اكسبريس",
-        client_name: "سامح",
-        tripType: "أوفر داي",
-        from: "الغردقة",
-        to: "الأقصر",
-        nationality: "ألماني",
-        paxCount: 4,
-        carType: "ميكروباص",
-        carName: "تويوتا هيس",
-        carNumber: "1234",
-        driverName: "أحمد علي",
-        tripDate: todayStr,
-        createdAt: now.toISOString()
-      },
-      {
-        company_name: "أي ديال تورز",
-        client_name: "حجيج",
-        tripType: "توصيلة",
-        from: "الغردقة",
-        to: "مرسى علم",
-        nationality: "إنجليزي",
-        paxCount: 2,
-        carType: "ليموزين",
-        carName: "مرسيدس",
-        carNumber: "5678",
-        driverName: "محمد حسن",
-        tripDate: yesterdayStr,
-        createdAt: new Date(now.getTime() - 30 * 60 * 60 * 1000).toISOString()
-      }
-    ];
+    let permits = [];
 
-    let permits = JSON.parse(localStorage.getItem('tripPermits')) || samplePermits;
+    // جلب البيانات مباشرة من الشيت عبر الـ Web App
+    async function fetchTripsFromSheet() {
+      // إرسال الـ token إذا كان موجوداً فقط بدون إجبار المستخدم
+      const token = localStorage.getItem('userToken') || '';
+
+      try {
+        const response = await fetch(`${WEB_APP_URL}?token=${encodeURIComponent(token)}&sheet=trips`);
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+          permits = data;
+          renderPermitsTable();
+        } else if (data.status === 'error') {
+          document.getElementById('permitsTableBody').innerHTML = `<tr><td colspan="12" class="text-danger">خطأ: ${data.error || data.message}</td></tr>`;
+        }
+      } catch (err) {
+        console.error('Fetch Error:', err);
+        document.getElementById('permitsTableBody').innerHTML = '<tr><td colspan="12" class="text-danger">فشل الاتصال بالشيت. يرجى التحقق من الاتصال بالإنترنت.</td></tr>';
+      }
+    }
 
     function renderPermitsTable() {
       const tbody = document.getElementById('permitsTableBody');
       tbody.innerHTML = '';
+
+      if (!permits || permits.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">لا توجد رحلات مسجلة في الشيت</td></tr>';
+        return;
+      }
 
       const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
       const currentTime = new Date().getTime();
@@ -327,7 +313,6 @@
       let visibleIndex = 1;
       let totalCost = 0;
 
-      // عداد أعداد السيارات المعروضة محصور على الأنواع الأربعة
       const counts = {
         "ليموزين": 0,
         "ميكروباص": 0,
@@ -336,39 +321,39 @@
       };
 
       permits.forEach((permit) => {
-        const permitTime = new Date(permit.createdAt).getTime();
-        
-        // تصفية آخر 72 ساعة من تاريخ الإنشاء
-        if (currentTime - permitTime > seventyTwoHoursInMs) return;
+        const createdDate = permit.timestamp ? new Date(permit.timestamp) : null;
+        const permitTime = createdDate ? createdDate.getTime() : 0;
 
-        // تصفية حسب الشركة المختارة
+        // تصفية آخر 72 ساعة حسب تاريخ الإنشاء إن وجد
+        if (permitTime && (currentTime - permitTime > seventyTwoHoursInMs)) return;
+
+        // فلترة الشركة
         if (selectedCompany && permit.company_name !== selectedCompany) return;
 
-        // تصفية حسب نطاق تاريخ الرحلة (Trip Date Filter)
-        if (startDate && permit.tripDate < startDate) return;
-        if (endDate && permit.tripDate > endDate) return;
+        // فلترة تاريخ الرحلة
+        const tripDate = permit.trip_date || '';
+        if (startDate && tripDate < startDate) return;
+        if (endDate && tripDate > endDate) return;
 
-        const carType = permit.carType || "غير محدد";
+        const carType = permit.car_type || "غير محدد";
         const costValue = carPrices[carType] !== undefined ? carPrices[carType] : (parseInt(permit.cost) || 0);
         const costStr = `${costValue} ج`;
 
-        // تصفية حسب النص
-        const clientName = permit.client_name || permit.clientName || '-';
+        const clientName = permit.client_name || '-';
         const matches = 
           (permit.company_name && permit.company_name.toLowerCase().includes(filterText)) ||
           clientName.toLowerCase().includes(filterText) ||
-          (permit.tripType && permit.tripType.toLowerCase().includes(filterText)) ||
-          (permit.from && permit.from.toLowerCase().includes(filterText)) ||
-          (permit.to && permit.to.toLowerCase().includes(filterText)) ||
+          (permit.trip_type && permit.trip_type.toLowerCase().includes(filterText)) ||
+          (permit.from_location && permit.from_location.toLowerCase().includes(filterText)) ||
+          (permit.to_location && permit.to_location.toLowerCase().includes(filterText)) ||
           (permit.nationality && permit.nationality.toLowerCase().includes(filterText)) ||
           carType.toLowerCase().includes(filterText) ||
-          (permit.carName && permit.carName.toLowerCase().includes(filterText)) ||
-          (permit.carNumber && permit.carNumber.toLowerCase().includes(filterText)) ||
-          (permit.driverName && permit.driverName.toLowerCase().includes(filterText));
+          (permit.car_name && permit.car_name.toLowerCase().includes(filterText)) ||
+          (permit.car_number && permit.car_number.toLowerCase().includes(filterText)) ||
+          (permit.driver_name && permit.driver_name.toLowerCase().includes(filterText));
 
         if (!matches) return;
 
-        // حساب وإضافة التوتل وعدّ أنواع السيارات للسيارات المعروضة
         totalCost += costValue;
         if (counts[carType] !== undefined) {
           counts[carType]++;
@@ -378,21 +363,24 @@
         tr.innerHTML = `
           <td>${visibleIndex++}</td>
           <td data-col-index="1">${clientName}</td>
-          <td data-col-index="2">${permit.tripType || '-'}</td>
-          <td data-col-index="3">${permit.from || '-'}</td>
-          <td data-col-index="4">${permit.to || '-'}</td>
+          <td data-col-index="2">${permit.trip_type || '-'}</td>
+          <td data-col-index="3">${permit.from_location || '-'}</td>
+          <td data-col-index="4">${permit.to_location || '-'}</td>
           <td data-col-index="5">${permit.nationality || '-'}</td>
-          <td data-col-index="6">${permit.paxCount || 0}</td>
+          <td data-col-index="6">${permit.pax_count || 0}</td>
           <td data-col-index="7">${carType}</td>
-          <td data-col-index="8">${permit.carName || '-'}</td>
-          <td data-col-index="9">${permit.carNumber || '-'}</td>
-          <td data-col-index="10">${permit.driverName || '-'}</td>
+          <td data-col-index="8">${permit.car_name || '-'}</td>
+          <td data-col-index="9">${permit.car_number || '-'}</td>
+          <td data-col-index="10">${permit.driver_name || '-'}</td>
           <td data-col-index="11" class="fw-bold text-success-custom">${costStr}</td>
         `;
         tbody.appendChild(tr);
       });
 
-      // تحديث إجمالي الكوست وتفاصيل أعداد أنواع السيارات المعروضة ديناميكياً
+      if (visibleIndex === 1) {
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">لا توجد نتائج تطابق خيارات البحث</td></tr>';
+      }
+
       document.getElementById('totalCostSum').textContent = `${totalCost} ج`;
       document.getElementById('carTypesCount').textContent = 
         `ليموزين: ${counts["ليموزين"]} | ميكروباص: ${counts["ميكروباص"]} | كوستر: ${counts["كوستر"]} | اوتوبيس: ${counts["اوتوبيس"]}`;
@@ -423,7 +411,7 @@
     document.getElementById('startDate').addEventListener('change', renderPermitsTable);
     document.getElementById('endDate').addEventListener('change', renderPermitsTable);
 
-    renderPermitsTable();
+    window.addEventListener('DOMContentLoaded', fetchTripsFromSheet);
   </script>
 </body>
 </html>
