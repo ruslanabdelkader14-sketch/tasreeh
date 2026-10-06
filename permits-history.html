@@ -272,9 +272,52 @@
 
     let permits = [];
 
+    // دالة تحويل مختلف صيغ التاريخ إلى صيغة YYYY-MM-DD المقبولة في المقارنة
+    function normalizeDateString(dateVal) {
+      if (!dateVal) return '';
+      let str = String(dateVal).trim();
+      
+      // التعامل مع صيغ ISO التي تحتوي على T
+      if (str.includes('T')) {
+        const dt = new Date(str);
+        if (!isNaN(dt.getTime())) {
+          const yy = dt.getFullYear();
+          const mm = String(dt.getMonth() + 1).padStart(2, '0');
+          const dd = String(dt.getDate()).padStart(2, '0');
+          return `${yy}-${mm}-${dd}`;
+        }
+        str = str.split('T')[0];
+      }
+
+      // إذا كان التاريخ مسبقاً بأسلوب YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        return str;
+      }
+
+      // التعامل مع صيغ مثل M/D/YYYY أو MM/DD/YYYY أو MM/DD/YYYY HH:MM:SS
+      const spaceSplit = str.split(' ')[0];
+      const parts = spaceSplit.split('/');
+      if (parts.length === 3) {
+        let m = parts[0].padStart(2, '0');
+        let d = parts[1].padStart(2, '0');
+        let y = parts[2];
+        if (y.length === 4) return `${y}-${m}-${d}`;
+      }
+
+      // تحويل تاريخ غير معالج عبر JavaScript Date كخيار أخير
+      const parsed = new Date(dateVal);
+      if (!isNaN(parsed.getTime())) {
+        const y = parsed.getFullYear();
+        const m = String(parsed.getMonth() + 1).padStart(2, '0');
+        const d = String(parsed.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+
+      return str;
+    }
+
     // جلب البيانات مباشرة من الشيت عبر الـ Web App
     async function fetchTripsFromSheet() {
-      // إرسال الـ token إذا كان موجوداً فقط بدون إجبار المستخدم
       const token = localStorage.getItem('userToken') || '';
 
       try {
@@ -305,10 +348,11 @@
       const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
       const currentTime = new Date().getTime();
 
-      const filterText = document.getElementById('searchInput').value.toLowerCase();
-      const selectedCompany = document.getElementById('companyFilter').value;
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
+      const filterText = document.getElementById('searchInput').value.toLowerCase().trim();
+      const selectedCompany = document.getElementById('companyFilter').value.trim();
+      
+      const startDateInput = document.getElementById('startDate').value; // YYYY-MM-DD
+      const endDateInput = document.getElementById('endDate').value;     // YYYY-MM-DD
 
       let visibleIndex = 1;
       let totalCost = 0;
@@ -321,19 +365,29 @@
       };
 
       permits.forEach((permit) => {
-        const createdDate = permit.timestamp ? new Date(permit.timestamp) : null;
-        const permitTime = createdDate ? createdDate.getTime() : 0;
+        // 1. تصفية آخر 72 ساعة حسب تاريخ التسجيل Timestamp
+        if (permit.timestamp) {
+          const createdDate = new Date(permit.timestamp);
+          const permitTime = createdDate.getTime();
+          if (!isNaN(permitTime) && (currentTime - permitTime > seventyTwoHoursInMs)) {
+            return;
+          }
+        }
 
-        // تصفية آخر 72 ساعة حسب تاريخ الإنشاء إن وجد
-        if (permitTime && (currentTime - permitTime > seventyTwoHoursInMs)) return;
+        // 2. فلترة الشركة
+        if (selectedCompany && String(permit.company_name || '').trim() !== selectedCompany) {
+          return;
+        }
 
-        // فلترة الشركة
-        if (selectedCompany && permit.company_name !== selectedCompany) return;
-
-        // فلترة تاريخ الرحلة
-        const tripDate = permit.trip_date || '';
-        if (startDate && tripDate < startDate) return;
-        if (endDate && tripDate > endDate) return;
+        // 3. فلترة تاريخ الرحلة الدقيقة (مقارنة النصوص بالنمط YYYY-MM-DD)
+        const tripDateFormatted = normalizeDateString(permit.trip_date);
+        
+        if (startDateInput && tripDateFormatted && tripDateFormatted < startDateInput) {
+          return;
+        }
+        if (endDateInput && tripDateFormatted && tripDateFormatted > endDateInput) {
+          return;
+        }
 
         const carType = permit.car_type || "غير محدد";
         const costValue = carPrices[carType] !== undefined ? carPrices[carType] : (parseInt(permit.cost) || 0);
@@ -349,7 +403,7 @@
           (permit.nationality && permit.nationality.toLowerCase().includes(filterText)) ||
           carType.toLowerCase().includes(filterText) ||
           (permit.car_name && permit.car_name.toLowerCase().includes(filterText)) ||
-          (permit.car_number && permit.car_number.toLowerCase().includes(filterText)) ||
+          (permit.car_number && String(permit.car_number).toLowerCase().includes(filterText)) ||
           (permit.driver_name && permit.driver_name.toLowerCase().includes(filterText));
 
         if (!matches) return;
