@@ -322,6 +322,31 @@
     <!-- Container الرئيسي للأستمارة -->
     <div class="main-container p-4 p-md-5" id="printableArea">
       <h3 class="mb-4 text-center fw-bold page-title">إضافة بيانات رحلة جديدة</h3>
+      
+      <!-- مربع إدخال كود JSON واستيراد البيانات تلقائياً (قابلة للفتح والإغلاق) -->
+      <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center role-button" 
+             style="cursor: pointer;" 
+             data-bs-toggle="collapse" 
+             data-bs-target="#jsonImportCollapse" 
+             aria-expanded="false" 
+             aria-controls="jsonImportCollapse">
+          <span>⚡ استيراد البيانات تلقائياً من الـ AI</span>
+          <span class="fs-6">▼</span>
+        </div>
+        <div class="collapse" id="jsonImportCollapse">
+          <div class="card-body">
+            <div class="mb-2">
+              <label class="form-label">الصق كود الـ JSON الناتج من الـ AI هنا:</label>
+              <textarea class="form-control font-monospace" id="jsonImportInput" rows="4" placeholder='{"company_name": "...", "passengers": [...]}'></textarea>
+            </div>
+            <button type="button" class="btn btn-primary w-100 fw-bold" id="applyJsonBtn">
+              🚀 تطبيق البيانات واستكمال الخانات
+            </button>
+          </div>
+        </div>
+      </div>
+
       <form id="tripForm" onsubmit="return false">
         
         <!-- اسم الشركة والعميل -->
@@ -849,6 +874,64 @@
       addPassengerBtn.addEventListener('click', function() {
         addPassengerRow();
         saveCurrentFormDataToTab();
+      });
+
+      // ⚡ تطبيق بيانات الـ JSON المستخرجة من الـ AI
+      document.getElementById('applyJsonBtn').addEventListener('click', function() {
+        const rawJson = document.getElementById('jsonImportInput').value.trim();
+        if (!rawJson) {
+          alert('برجاء لصق كود الـ JSON أولاً!');
+          return;
+        }
+
+        try {
+          const data = JSON.parse(rawJson);
+
+          // 1. تعبئة الحقول العادية
+          Object.keys(data).forEach(key => {
+            if (key !== 'passengers') {
+              const field = document.querySelector(`[name="${key}"]`) || document.getElementById(key);
+              if (field) {
+                field.value = data[key] || '';
+              }
+            }
+          });
+
+          // تحديث قائمة العملاء إذا تم تغيير الشركة
+          if (data.company_name) {
+            const companySelect = document.getElementById('company_name');
+            if (companySelect) {
+              companySelect.value = data.company_name;
+              companySelect.dispatchEvent(new Event('change')); // لتحديث قائمة العملاء
+              if (data.client_name) {
+                document.getElementById('client_name').value = data.client_name;
+              }
+            }
+          }
+
+          // 2. تعبئة جدول المسافرين
+          if (Array.isArray(data.passengers) && data.passengers.length > 0) {
+            tableBody.innerHTML = ''; // مسح الصفوف القديمة
+
+            data.passengers.forEach(p => {
+              addPassengerRow({
+                name: p.name || '',
+                nationality: p.nationality || '',
+                hotel: p.hotel || '',
+                room: p.room || '',
+                price: p.price || ''
+              });
+            });
+          }
+
+          // حفظ البيانات في التابة الحالية
+          saveCurrentFormDataToTab();
+
+          alert('تمت تعبئة جميع البيانات بنجاح! 🎉');
+        } catch (err) {
+          console.error(err);
+          alert('حدث خطأ في قراءة كود الـ JSON! تأكد من نسخ الكود بشكل صحيح من الـ AI.');
+        }
       });
 
       // البحث عن سيارة بالاسم/الرقم/السائق
