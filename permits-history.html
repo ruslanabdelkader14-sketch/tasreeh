@@ -115,6 +115,7 @@
       border-radius: 12px;
     }
 
+    .btn-row { padding: 2px 8px; font-size: .85rem; border-radius: 6px; }
     .text-success-custom {
       color: #2E7D32 !important;
     }
@@ -240,10 +241,11 @@
             <th data-col-index="9">رقم العربية</th>
             <th data-col-index="10">اسم السائق</th>
             <th data-col-index="11">الكوست</th>
+            <th>إجراءات</th>
           </tr>
         </thead>
         <tbody id="permitsTableBody">
-          <tr><td colspan="12" class="text-center">جاري تحميل البيانات من الشيت...</td></tr>
+          <tr><td colspan="13" class="text-center">جاري تحميل البيانات من الشيت...</td></tr>
         </tbody>
       </table>
     </div>
@@ -259,9 +261,80 @@
     </div>
   </div>
 
+  <!-- نافذة تعديل الرحلة -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:var(--secondary-accent);color:#fff;">
+          <h5 class="modal-title fw-bold">✏️ تعديل بيانات الرحلة</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm" onsubmit="return false">
+            <div class="row g-3">
+              <div class="col-md-4"><label class="form-label">اسم الشركة</label><select class="form-select" name="company_name" id="e_company_name"></select></div>
+              <div class="col-md-4"><label class="form-label">العميل</label><select class="form-select" name="client_name" id="e_client_name"></select></div>
+              <div class="col-md-4"><label class="form-label">تاريخ الرحلة</label><input type="date" class="form-control" name="trip_date" required></div>
+
+              <div class="col-md-4"><label class="form-label">نوع الرحلة</label>
+                <select class="form-select" name="trip_type"><option>أوفر داي</option><option>أوفر نايت</option><option>توصيلة</option></select></div>
+              <div class="col-md-4"><label class="form-label">من</label>
+                <select class="form-select" name="from_location"><option>الغردقة</option><option>مرسى علم</option><option>الأقصر</option><option>أسوان</option></select></div>
+              <div class="col-md-4"><label class="form-label">إلى</label>
+                <select class="form-select" name="to_location"><option>القاهرة</option><option>الأقصر</option><option>أسوان</option><option>مرسى علم</option></select></div>
+
+              <div class="col-md-6"><label class="form-label">الجنسية العامة</label><input type="text" class="form-control" name="nationality"></div>
+              <div class="col-md-6"><label class="form-label">العدد</label><input type="number" min="1" class="form-control" name="pax_count"></div>
+
+              <div class="col-md-3"><label class="form-label">نوع العربية</label>
+                <select class="form-select" name="car_type" required><option>ليموزين</option><option>ميكروباص</option><option>كوستر</option><option>اوتوبيس</option></select></div>
+              <div class="col-md-3"><label class="form-label">اسم العربية</label><input type="text" class="form-control" name="car_name"></div>
+              <div class="col-md-2"><label class="form-label">لوحة العربية</label><input type="text" class="form-control" name="car_plate"></div>
+              <div class="col-md-2"><label class="form-label">رقم العربية</label><input type="text" class="form-control" name="car_number"></div>
+              <div class="col-md-2"><label class="form-label">رقم الشاسيه</label><input type="text" class="form-control" name="chassis_number"></div>
+
+              <div class="col-md-6"><label class="form-label">اسم المرشد</label><input type="text" class="form-control" name="guide_name"></div>
+              <div class="col-md-6"><label class="form-label">رقم المرشد</label><input type="text" class="form-control" name="guide_phone"></div>
+              <div class="col-md-6"><label class="form-label">اسم السائق</label><input type="text" class="form-control" name="driver_name"></div>
+              <div class="col-md-6"><label class="form-label">رقم السائق</label><input type="text" class="form-control" name="driver_phone"></div>
+              <div class="col-md-6"><label class="form-label">اسم السائق الاحتياطي</label><input type="text" class="form-control" name="backup_driver_name"></div>
+              <div class="col-md-6"><label class="form-label">رقم السائق الاحتياطي</label><input type="text" class="form-control" name="backup_driver_phone"></div>
+
+              <div class="col-md-6"><label class="form-label">موعد الذهاب</label><input type="text" class="form-control" name="departure_time"></div>
+              <div class="col-md-6"><label class="form-label">إضافة للبرنامج</label><textarea class="form-control" name="program_details" rows="1"></textarea></div>
+            </div>
+          </form>
+          <div id="editStatus" class="alert d-none mt-3 mb-0" role="alert"></div>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-custom-brown fw-bold d-none" id="modalPrintBtn">🖨 طباعة الإخطار</button>
+            <button type="button" class="btn fw-bold text-white" style="background:var(--primary-accent);" id="modalSaveBtn">💾 حفظ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec";
+
+    // 🔒 لازم جلسة دخول سارية (نفس index.html)
+    const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
+    if (!SESSION) location.replace('login.html');
+    function authFail() { sessionStorage.removeItem('session'); location.replace('login.html'); }
+
+    const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // نفس بيانات الشركات في index.html (لازم تفضل متطابقة)
+    const defaultCompaniesData = {
+      "افريكان اكسبريس": { license: "454", negotiatorName: "عمرو خالد", negotiatorNationalId: "29801011234567", clients: ["سامح", "حجيج", "افريكان"] },
+      "أي ديال تورز": { license: "1061", negotiatorName: "روسلان ميسرة", negotiatorNationalId: "29505051234567", clients: ["عميل 1"] },
+      "فوياج": { license: "22112", negotiatorName: "شهاب", negotiatorNationalId: "29903031234567", clients: ["عميل فوياج 1"] }
+    };
+    const companiesStore = JSON.parse(localStorage.getItem('companiesSettingsStore')) || defaultCompaniesData;
 
     const carPrices = {
       "ليموزين": 250,
@@ -318,7 +391,7 @@
 
     // جلب البيانات مباشرة من الشيت عبر الـ Web App
     async function fetchTripsFromSheet() {
-      const token = localStorage.getItem('userToken') || '';
+      const token = (SESSION && SESSION.token) || '';
 
       try {
         const response = await fetch(`${WEB_APP_URL}?token=${encodeURIComponent(token)}&sheet=trips`);
@@ -327,12 +400,14 @@
         if (Array.isArray(data)) {
           permits = data;
           renderPermitsTable();
+        } else if (data && data.error === 'expired') {
+          authFail();
         } else if (data.status === 'error') {
-          document.getElementById('permitsTableBody').innerHTML = `<tr><td colspan="12" class="text-danger">خطأ: ${data.error || data.message}</td></tr>`;
+          document.getElementById('permitsTableBody').innerHTML = `<tr><td colspan="13" class="text-danger">خطأ: ${data.error || data.message}</td></tr>`;
         }
       } catch (err) {
         console.error('Fetch Error:', err);
-        document.getElementById('permitsTableBody').innerHTML = '<tr><td colspan="12" class="text-danger">فشل الاتصال بالشيت. يرجى التحقق من الاتصال بالإنترنت.</td></tr>';
+        document.getElementById('permitsTableBody').innerHTML = '<tr><td colspan="13" class="text-danger">فشل الاتصال بالشيت. يرجى التحقق من الاتصال بالإنترنت.</td></tr>';
       }
     }
 
@@ -341,7 +416,7 @@
       tbody.innerHTML = '';
 
       if (!permits || permits.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">لا توجد رحلات مسجلة في الشيت</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center text-muted">لا توجد رحلات مسجلة في الشيت</td></tr>';
         return;
       }
 
@@ -416,23 +491,24 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${visibleIndex++}</td>
-          <td data-col-index="1">${clientName}</td>
-          <td data-col-index="2">${permit.trip_type || '-'}</td>
-          <td data-col-index="3">${permit.from_location || '-'}</td>
-          <td data-col-index="4">${permit.to_location || '-'}</td>
-          <td data-col-index="5">${permit.nationality || '-'}</td>
+          <td data-col-index="1">${esc(clientName)}</td>
+          <td data-col-index="2">${esc(permit.trip_type || '-')}</td>
+          <td data-col-index="3">${esc(permit.from_location || '-')}</td>
+          <td data-col-index="4">${esc(permit.to_location || '-')}</td>
+          <td data-col-index="5">${esc(permit.nationality || '-')}</td>
           <td data-col-index="6">${permit.pax_count || 0}</td>
-          <td data-col-index="7">${carType}</td>
-          <td data-col-index="8">${permit.car_name || '-'}</td>
-          <td data-col-index="9">${permit.car_number || '-'}</td>
-          <td data-col-index="10">${permit.driver_name || '-'}</td>
+          <td data-col-index="7">${esc(carType)}</td>
+          <td data-col-index="8">${esc(permit.car_name || '-')}</td>
+          <td data-col-index="9">${esc(permit.car_number || '-')}</td>
+          <td data-col-index="10">${esc(permit.driver_name || '-')}</td>
           <td data-col-index="11" class="fw-bold text-success-custom">${costStr}</td>
+          <td class="text-nowrap">${actionsCell(permit)}</td>
         `;
         tbody.appendChild(tr);
       });
 
       if (visibleIndex === 1) {
-        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">لا توجد نتائج تطابق خيارات البحث</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center text-muted">لا توجد نتائج تطابق خيارات البحث</td></tr>';
       }
 
       document.getElementById('totalCostSum').textContent = `${totalCost} ج`;
@@ -455,6 +531,149 @@
         tds.forEach(td => td.style.display = isChecked ? '' : 'none');
       });
     }
+
+    // ================= تعديل / حذف / طباعة =================
+    function actionsCell(p) {
+      const id = esc(p.trip_id || '');
+      if (!id) return '<span class="text-muted small" title="رحلة قديمة بدون رقم تعريف">—</span>';
+      return `
+        <button class="btn btn-outline-custom-orange btn-row" data-act="edit" data-id="${id}" title="تعديل">✏️</button>
+        <button class="btn btn-outline-custom-brown btn-row" data-act="print" data-id="${id}" title="طباعة الإخطار">🖨</button>
+        <button class="btn btn-outline-danger btn-row" data-act="delete" data-id="${id}" title="حذف">🗑</button>`;
+    }
+
+    const findPermit = id => permits.find(p => String(p.trip_id) === String(id));
+    const FIELDS = ['company_name','client_name','trip_type','from_location','to_location','trip_date','nationality','pax_count',
+      'car_type','car_name','car_plate','car_number','chassis_number','guide_name','guide_phone','driver_name','driver_phone',
+      'backup_driver_name','backup_driver_phone','departure_time','program_details'];
+
+    // بيانات الإخطار = نفس اللي index.html بيخزنها في tripFormData
+    function printNotice(d) {
+      const comp = companiesStore[d.company_name] || {};
+      const data = Object.assign({}, d, {
+        company_license: comp.license || '',
+        negotiator_name: comp.negotiatorName || '',
+        negotiator_id: comp.negotiatorNationalId || ''
+      });
+      localStorage.setItem('tripFormData', JSON.stringify(data));
+      window.open('htmlAkhtar.html', '_blank');
+    }
+
+    const editModalEl = document.getElementById('editModal');
+    const editModal = new bootstrap.Modal(editModalEl);
+    const editForm = document.getElementById('editForm');
+    const eCompany = document.getElementById('e_company_name');
+    const eClient = document.getElementById('e_client_name');
+    const modalPrintBtn = document.getElementById('modalPrintBtn');
+    const modalSaveBtn = document.getElementById('modalSaveBtn');
+    const editStatus = document.getElementById('editStatus');
+    let editingId = null;
+
+    function setOptions(sel, values, current) {
+      const list = values.slice();
+      if (current && !list.includes(current)) list.push(current);
+      sel.innerHTML = list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+      sel.value = current || list[0] || '';
+    }
+    function fillClients(current) {
+      const c = companiesStore[eCompany.value];
+      setOptions(eClient, (c && c.clients) || [], current);
+    }
+    function setSelect(name, val) {
+      const el = editForm.elements[name];
+      if (val && ![...el.options].some(o => o.value === val)) el.add(new Option(val, val));
+      el.value = val || el.options[0].value;
+    }
+    function showEditStatus(msg, type) {
+      editStatus.className = 'alert mt-3 mb-0 alert-' + type;
+      editStatus.textContent = msg;
+    }
+
+    function openEdit(p) {
+      editingId = String(p.trip_id);
+      const companies = [...new Set([...Object.keys(companiesStore), ...[...document.getElementById('companyFilter').options].map(o => o.value).filter(Boolean)])];
+      setOptions(eCompany, companies, p.company_name);
+      fillClients(p.client_name);
+      ['trip_type','from_location','to_location','car_type'].forEach(n => setSelect(n, p[n]));
+      FIELDS.forEach(n => {
+        if (['company_name','client_name','trip_type','from_location','to_location','car_type'].includes(n)) return;
+        editForm.elements[n].value = n === 'trip_date' ? normalizeDateString(p[n]) : (p[n] == null ? '' : p[n]);
+      });
+      editStatus.className = 'alert d-none';
+      modalPrintBtn.classList.add('d-none');
+      modalSaveBtn.disabled = false;
+      editModal.show();
+    }
+
+    function readEditForm() {
+      const d = {};
+      FIELDS.forEach(n => d[n] = editForm.elements[n].value);
+      return d;
+    }
+
+    eCompany.addEventListener('change', () => fillClients(''));
+    // أي تعديل بعد الحفظ → لازم يحفظ تاني قبل الطباعة
+    editForm.addEventListener('input', () => modalPrintBtn.classList.add('d-none'));
+    editForm.addEventListener('change', () => modalPrintBtn.classList.add('d-none'));
+
+    modalSaveBtn.addEventListener('click', async () => {
+      if (!editForm.checkValidity()) { editForm.reportValidity(); return; }
+      const d = readEditForm();
+      const params = new URLSearchParams();
+      params.append('action', 'addTrip');       // نفس trip_id = تحديث الصف الموجود
+      params.append('trip_id', editingId);
+      params.append('token', SESSION.token);
+      FIELDS.forEach(k => params.append(k, d[k] || ''));
+
+      modalSaveBtn.disabled = true;
+      showEditStatus('جاري الحفظ...', 'info');
+      try {
+        const res = await (await fetch(WEB_APP_URL, { method: 'POST', body: params })).json();
+        if (res && res.error === 'expired') return authFail();
+        if (!res || res.status !== 'success') throw new Error((res && res.message) || 'save failed');
+        const p = findPermit(editingId);
+        Object.assign(p, d);
+        renderPermitsTable();
+        showEditStatus('✔ تم حفظ التعديل في الشيت', 'success');
+        modalPrintBtn.classList.remove('d-none');
+      } catch (err) {
+        console.error(err);
+        showEditStatus('⚠ تعذر الحفظ، حاول مرة تانية', 'danger');
+      } finally {
+        modalSaveBtn.disabled = false;
+      }
+    });
+
+    modalPrintBtn.addEventListener('click', () => printNotice(readEditForm()));
+
+    async function deleteTrip(p) {
+      const label = `${p.client_name || ''} - ${p.to_location || ''} (${normalizeDateString(p.trip_date)})`;
+      if (!confirm(`متأكد إنك عايز تحذف الرحلة دي نهائياً من الشيت؟\n${label}`)) return;
+      const params = new URLSearchParams();
+      params.append('action', 'deleteTrip');
+      params.append('trip_id', p.trip_id);
+      params.append('token', SESSION.token);
+      try {
+        const res = await (await fetch(WEB_APP_URL, { method: 'POST', body: params })).json();
+        if (res && res.error === 'expired') return authFail();
+        if (!res || res.status !== 'success') throw new Error((res && res.message) || 'delete failed');
+        permits = permits.filter(x => String(x.trip_id) !== String(p.trip_id));
+        renderPermitsTable();
+      } catch (err) {
+        console.error(err);
+        alert('⚠ تعذر الحذف، حاول مرة تانية');
+      }
+    }
+
+    document.getElementById('permitsTableBody').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      const p = findPermit(btn.dataset.id);
+      if (!p) return;
+      if (btn.dataset.act === 'edit') openEdit(p);
+      else if (btn.dataset.act === 'delete') deleteTrip(p);
+      else if (btn.dataset.act === 'print') printNotice(Object.assign({}, p, { trip_date: normalizeDateString(p.trip_date) }));
+    });
 
     document.querySelectorAll('.column-toggle').forEach(checkbox => {
       checkbox.addEventListener('change', applyColumnVisibility);
