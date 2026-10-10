@@ -355,27 +355,63 @@
   const pendingNew = new Set(); // شركات اتضافت في الصفحة ولسه ماتحفظتش في الشيت
 
   // ---------- التوكن (اللي اتحفظ وقت تسجيل الدخول) ----------
+  // التوكن شكله uuid ورا uuid، فبندور عليه في أي مكان متخزن (حتى لو جوه JSON)
+  const TOKEN_RE = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}){2}$/i;
+  let tokenKeyUsed = '';
+
+  function findTokenIn(val) {
+    if (typeof val === 'string') {
+      const s = val.trim().replace(/^"|"$/g, '');
+      if (TOKEN_RE.test(s)) return s;
+      if (s[0] === '{' || s[0] === '[') {
+        try { return findTokenIn(JSON.parse(s)); } catch (_) {}
+      }
+    } else if (val && typeof val === 'object') {
+      for (const k of Object.keys(val)) {
+        const r = findTokenIn(val[k]);
+        if (r) return r;
+      }
+    }
+    return '';
+  }
+
   function getToken() {
-    const known = ['token', 'authToken', 'auth_token', 'sessionToken', 'session_token'];
     for (const st of [sessionStorage, localStorage]) {
       try {
-        for (const k of known) {
-          const v = (st.getItem(k) || '').replace(/^"|"$/g, '');
-          if (v.length >= 32) return v;
-        }
         for (let i = 0; i < st.length; i++) {
           const k = st.key(i);
-          if (/token/i.test(k)) {
-            const v = (st.getItem(k) || '').replace(/^"|"$/g, '');
-            if (v.length >= 32) return v;
-          }
+          const t = findTokenIn(st.getItem(k));
+          if (t) { tokenKeyUsed = k; return t; }
         }
       } catch (_) {}
     }
     return '';
   }
 
-  function goLogin() { window.location.href = LOGIN_PAGE; }
+  function storageKeys() {
+    const out = [];
+    for (const [n, st] of [['session', sessionStorage], ['local', localStorage]]) {
+      try { for (let i = 0; i < st.length; i++) out.push(n + ':' + st.key(i)); } catch (_) {}
+    }
+    return out.join(', ') || '(فاضي)';
+  }
+
+  // مابنحوّلش لصفحة الدخول تلقائياً، بنعرض السبب الأول عشان نعرف المشكلة فين
+  function goLogin(reason) {
+    alertError.textContent = '';
+    const msg = document.createElement('div');
+    msg.textContent = reason === 'no_token'
+      ? 'مالقيتش جلسة تسجيل دخول في المتصفح. المخزّن حالياً: ' + storageKeys()
+      : 'السيرفر رفض جلسة الدخول (انتهت أو مش صالحة)' + (tokenKeyUsed ? ' — المفتاح المستخدم: ' + tokenKeyUsed : '');
+    const link = document.createElement('a');
+    link.href = LOGIN_PAGE;
+    link.textContent = 'اضغط هنا لتسجيل الدخول';
+    link.className = 'btn btn-sm btn-custom-orange mt-2';
+    alertError.appendChild(msg);
+    alertError.appendChild(link);
+    alertError.classList.remove('d-none');
+    clearTimeout(errorTimer);
+  }
 
   let errorTimer = null;
   function showError(msg, sticky) {
@@ -420,11 +456,11 @@
 
   async function postAction(params) {
     const token = getToken();
-    if (!token) { goLogin(); throw new Error('no_token'); }
+    if (!token) { goLogin('no_token'); throw new Error('no_token'); }
     const body = new URLSearchParams(Object.assign({ token: token }, params));
     const res = await fetch(API_URL, { method: 'POST', body: body });
     const data = await res.json();
-    if (data.error === 'expired') { goLogin(); throw new Error('expired'); }
+    if (data.error === 'expired') { goLogin('expired'); throw new Error('expired'); }
     if (data.status === 'ignored') throw new Error('old_script');
     if (data.status !== 'success') throw new Error(data.message || data.error || 'error');
     return data;
