@@ -377,10 +377,21 @@
 
   function goLogin() { window.location.href = LOGIN_PAGE; }
 
-  function showError(msg) {
+  let errorTimer = null;
+  function showError(msg, sticky) {
     alertError.textContent = msg;
     alertError.classList.remove('d-none');
-    setTimeout(() => alertError.classList.add('d-none'), 5000);
+    clearTimeout(errorTimer);
+    if (!sticky) errorTimer = setTimeout(() => alertError.classList.add('d-none'), 8000);
+  }
+
+  const OLD_SCRIPT_MSG = 'الصفحة بتكلم نسخة قديمة من السكربت. في Apps Script: Deploy ← Manage deployments ← Edit ← Version: New version ← Deploy، وبعدها اعمل ريفريش.';
+
+  function explainError(err, fallback) {
+    if (err.message === 'old_script') return OLD_SCRIPT_MSG;
+    if (err.message === 'duplicate') return 'فيه شركة تانية بنفس الاسم ده';
+    if (err.message === 'verify') return 'السكربت رد بنجاح لكن البيانات ماظهرتش في الشيت. راجع إن النشر (Deploy) على آخر نسخة.';
+    return fallback + ' (' + err.message + ')';
   }
 
   function setBusy(b) {
@@ -394,6 +405,7 @@
     const res = await fetch(API_URL + '?sheet=companies&t=' + Date.now());
     const list = await res.json();
     if (!Array.isArray(list)) throw new Error(list.message || 'bad response');
+    if (list.length && !('negotiator_national_id' in list[0])) throw new Error('old_script');
     const store = {};
     list.forEach(c => {
       store[c.company_name] = {
@@ -413,6 +425,7 @@
     const res = await fetch(API_URL, { method: 'POST', body: body });
     const data = await res.json();
     if (data.error === 'expired') { goLogin(); throw new Error('expired'); }
+    if (data.status === 'ignored') throw new Error('old_script');
     if (data.status !== 'success') throw new Error(data.message || data.error || 'error');
     return data;
   }
@@ -543,6 +556,15 @@
         clients: (entry.clients || []).join(' | ')
       });
 
+      // نتأكد إن البيانات فعلاً اتكتبت في الشيت
+      const fresh = await fetchCompanies();
+      const saved = fresh[newName];
+      if (!saved || saved.license !== entry.license || saved.negotiatorName !== entry.negotiatorName ||
+          saved.negotiatorNationalId !== entry.negotiatorNationalId ||
+          saved.clients.join('|') !== (entry.clients || []).join('|')) {
+        throw new Error('verify');
+      }
+
       if (newName !== activeCompanyKey) delete companiesStore[activeCompanyKey];
       pendingNew.delete(activeCompanyKey);
       companiesStore[newName] = entry;
@@ -556,7 +578,7 @@
       setTimeout(() => alertSuccess.classList.add('d-none'), 3000);
     } catch (err) {
       if (err.message !== 'expired' && err.message !== 'no_token') {
-        showError(err.message === 'duplicate' ? 'فيه شركة تانية بنفس الاسم ده' : 'حصلت مشكلة في الحفظ، جرّب تاني');
+        showError(explainError(err, 'حصلت مشكلة في الحفظ'), err.message === 'old_script');
       }
     } finally {
       setBusy(false);
@@ -586,7 +608,7 @@
       loadActiveCompanyData();
     } catch (err) {
       if (err.message !== 'expired' && err.message !== 'no_token') {
-        showError('حصلت مشكلة في الحذف، جرّب تاني');
+        showError(explainError(err, 'حصلت مشكلة في الحذف'), err.message === 'old_script');
       }
     } finally {
       setBusy(false);
@@ -599,7 +621,7 @@
     if (!companiesStore[activeCompanyKey]) activeCompanyKey = Object.keys(companiesStore)[0] || '';
     mirrorLocal();
   } catch (err) {
-    showError('مقدرتش أحمّل الشركات من الشيت، اعمل ريفريش للصفحة');
+    showError(explainError(err, 'مقدرتش أحمّل الشركات من الشيت، اعمل ريفريش للصفحة'), true);
     btnSave.disabled = true;
     btnDeleteCompany.disabled = true;
   }
