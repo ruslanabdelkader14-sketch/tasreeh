@@ -591,7 +591,10 @@
       ['trip_type','from_location','to_location','car_type'].forEach(n => setSelect(n, p[n]));
       FIELDS.forEach(n => {
         if (['company_name','client_name','trip_type','from_location','to_location','car_type'].includes(n)) return;
-        editForm.elements[n].value = n === 'trip_date' ? normalizeDateString(p[n]) : (p[n] == null ? '' : p[n]);
+        
+        // 🔹 ضمان قراءة الحقول كنصوص صريحة للمحافظة على الأصفار في البداية (مثل أرقام الشاسيه ورقم العربية والهواتف)
+        const val = p[n];
+        editForm.elements[n].value = (val != null && val !== '') ? String(val) : (n === 'trip_date' ? normalizeDateString(p[n]) : '');
       });
       editStatus.className = 'alert d-none';
       modalPrintBtn.classList.add('d-none');
@@ -602,7 +605,17 @@
 
     function readEditForm() {
       const d = {};
-      FIELDS.forEach(n => d[n] = editForm.elements[n].value);
+      FIELDS.forEach(n => {
+        let val = editForm.elements[n].value;
+        // 🔹 التأكد من إرسال الأرقام التي تبدأ بأصفار كنصوص تمنع اقتطاع الصفر في الإكسل والشيت
+        if (['driver_phone', 'backup_driver_phone', 'driver_phone', 'chassis_number', 'car_number', 'guide_phone', 'car_plate'].includes(n)) {
+          val = String(val).trim();
+          if (/^0\d+/.test(val) && !val.startsWith("'")) {
+            val = "'" + val;
+          }
+        }
+        d[n] = val;
+      });
       return d;
     }
 
@@ -781,4 +794,3 @@
   </script>
 </body>
 </html>
-```[cite: 5]
