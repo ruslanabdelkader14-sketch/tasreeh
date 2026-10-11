@@ -871,6 +871,15 @@
         tripForm.reset();
 
         const data = currentTab.formData || {};
+        
+        // 🔹 استرجاع آخر شركة وعميل تم اختيارهما لضمان ثباتهما وعدم رجوعهما للافتراضي تلقائياً
+        const lastCompany = localStorage.getItem('lastSelectedCompany');
+        const lastClient = localStorage.getItem('lastSelectedClient');
+
+        if (!data.company_name && lastCompany) {
+          data.company_name = lastCompany;
+        }
+
         Object.keys(data).forEach(key => {
           const field = tripForm.querySelector(`[name="${key}"]`);
           if (field) {
@@ -883,6 +892,10 @@
           companyNameSelect.value = data.company_name;
         }
         updateClientsList();
+        
+        if (!data.client_name && lastClient) {
+          data.client_name = lastClient;
+        }
         if (data.client_name) {
           clientNameSelect.value = data.client_name;
         }
@@ -936,7 +949,14 @@
       }
 
       companyNameSelect.addEventListener('change', function() {
+        localStorage.setItem('lastSelectedCompany', companyNameSelect.value);
         updateClientsList();
+        localStorage.setItem('lastSelectedClient', clientNameSelect.value);
+        saveCurrentFormDataToTab();
+      });
+
+      clientNameSelect.addEventListener('change', function() {
+        localStorage.setItem('lastSelectedClient', clientNameSelect.value);
         saveCurrentFormDataToTab();
       });
 
@@ -1084,10 +1104,7 @@
               `;
 
               item.addEventListener('click', function() {
-                if (car.company) {
-                  companyNameSelect.value = car.company;
-                  updateClientsList();
-                }
+                // 🔹 تم إزالة تعديل الشركة والعميل من هنا بناءً على طلبك لتبقى ثابتة ولا تتأثر باختيار السيارة
                 document.getElementById('car_type').value = car.carType || '';
                 document.getElementById('car_name').value = car.carName || '';
                 document.getElementById('car_plate').value = car.carPlate || '';
