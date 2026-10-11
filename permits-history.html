@@ -127,7 +127,7 @@
     <!-- الهيدر -->
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border-subtle) !important;">
       <h3 class="mb-0 fw-bold page-title">📋 تصاريح آخر 72 ساعة</h3>
-      <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←</a>
+      <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←[cite: 5]</a>
     </div>
 
     <!-- أدوات التحكم والفلترة -->
@@ -245,7 +245,7 @@
           </tr>
         </thead>
         <tbody id="permitsTableBody">
-          <tr><td colspan="13" class="text-center">جاري تحميل البيانات من الشيت...</td></tr>
+          <tr><td colspan="13" class="text-center">جاري تحميل البيانات من الشيت...[cite: 5]</td></tr>
         </tbody>
       </table>
     </div>
@@ -310,6 +310,7 @@
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-outline-custom-brown fw-bold d-none" id="modalPrintBtn">🖨 طباعة الإخطار</button>
+            <button type="button" class="btn btn-warning fw-bold text-white d-none" id="modalGovBtn" style="background-color: #e0a800; border-color: #d39e00;">🚀 تسجيل وزارة</button>
             <button type="button" class="btn fw-bold text-white" style="background:var(--primary-accent);" id="modalSaveBtn">💾 حفظ</button>
           </div>
         </div>
@@ -321,14 +322,14 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec";
 
-    // 🔒 لازم جلسة دخول سارية (نفس index.html)
+    // 🔒 لازم جلسة دخول سارية (نفس index.html)[cite: 5]
     const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
     if (!SESSION) location.replace('login.html');
     function authFail() { sessionStorage.removeItem('session'); location.replace('login.html'); }
 
     const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // نفس بيانات الشركات في index.html (لازم تفضل متطابقة)
+    // نفس بيانات الشركات في index.html (لازم تفضل متطابقة)[cite: 5]
     const defaultCompaniesData = {
       "افريكان اكسبريس": { license: "454", negotiatorName: "عمرو خالد", negotiatorNationalId: "29801011234567", clients: ["سامح", "حجيج", "افريكان"] },
       "أي ديال تورز": { license: "1061", negotiatorName: "روسلان ميسرة", negotiatorNationalId: "29505051234567", clients: ["عميل 1"] },
@@ -345,12 +346,11 @@
 
     let permits = [];
 
-    // دالة تحويل مختلف صيغ التاريخ إلى صيغة YYYY-MM-DD المقبولة في المقارنة
+    // دالة تحويل مختلف صيغ التاريخ إلى صيغة YYYY-MM-DD المقبولة في المقارنة[cite: 5]
     function normalizeDateString(dateVal) {
       if (!dateVal) return '';
       let str = String(dateVal).trim();
       
-      // التعامل مع صيغ ISO التي تحتوي على T
       if (str.includes('T')) {
         const dt = new Date(str);
         if (!isNaN(dt.getTime())) {
@@ -362,12 +362,10 @@
         str = str.split('T')[0];
       }
 
-      // إذا كان التاريخ مسبقاً بأسلوب YYYY-MM-DD
       if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
         return str;
       }
 
-      // التعامل مع صيغ مثل M/D/YYYY أو MM/DD/YYYY أو MM/DD/YYYY HH:MM:SS
       const spaceSplit = str.split(' ')[0];
       const parts = spaceSplit.split('/');
       if (parts.length === 3) {
@@ -377,7 +375,6 @@
         if (y.length === 4) return `${y}-${m}-${d}`;
       }
 
-      // تحويل تاريخ غير معالج عبر JavaScript Date كخيار أخير
       const parsed = new Date(dateVal);
       if (!isNaN(parsed.getTime())) {
         const y = parsed.getFullYear();
@@ -389,7 +386,7 @@
       return str;
     }
 
-    // جلب البيانات مباشرة من الشيت عبر الـ Web App
+    // جلب البيانات مباشرة من الشيت عبر الـ Web App[cite: 5]
     async function fetchTripsFromSheet() {
       const token = (SESSION && SESSION.token) || '';
 
@@ -426,8 +423,8 @@
       const filterText = document.getElementById('searchInput').value.toLowerCase().trim();
       const selectedCompany = document.getElementById('companyFilter').value.trim();
       
-      const startDateInput = document.getElementById('startDate').value; // YYYY-MM-DD
-      const endDateInput = document.getElementById('endDate').value;     // YYYY-MM-DD
+      const startDateInput = document.getElementById('startDate').value;
+      const endDateInput = document.getElementById('endDate').value;
 
       let visibleIndex = 1;
       let totalCost = 0;
@@ -440,7 +437,6 @@
       };
 
       permits.forEach((permit) => {
-        // 1. تصفية آخر 72 ساعة حسب تاريخ التسجيل Timestamp
         if (permit.timestamp) {
           const createdDate = new Date(permit.timestamp);
           const permitTime = createdDate.getTime();
@@ -449,12 +445,10 @@
           }
         }
 
-        // 2. فلترة الشركة
         if (selectedCompany && String(permit.company_name || '').trim() !== selectedCompany) {
           return;
         }
 
-        // 3. فلترة تاريخ الرحلة الدقيقة (مقارنة النصوص بالنمط YYYY-MM-DD)
         const tripDateFormatted = normalizeDateString(permit.trip_date);
         
         if (startDateInput && tripDateFormatted && tripDateFormatted < startDateInput) {
@@ -532,7 +526,7 @@
       });
     }
 
-    // ================= تعديل / حذف / طباعة =================
+    // ================= تعديل / حذف / طباعة[cite: 5] =================
     function actionsCell(p) {
       const id = esc(p.trip_id || '');
       if (!id) return '<span class="text-muted small" title="رحلة قديمة بدون رقم تعريف">—</span>';
@@ -547,7 +541,6 @@
       'car_type','car_name','car_plate','car_number','chassis_number','guide_name','guide_phone','driver_name','driver_phone',
       'backup_driver_name','backup_driver_phone','departure_time','program_details'];
 
-    // بيانات الإخطار = نفس اللي index.html بيخزنها في tripFormData
     function printNotice(d) {
       const comp = companiesStore[d.company_name] || {};
       const data = Object.assign({}, d, {
@@ -565,6 +558,7 @@
     const eCompany = document.getElementById('e_company_name');
     const eClient = document.getElementById('e_client_name');
     const modalPrintBtn = document.getElementById('modalPrintBtn');
+    const modalGovBtn = document.getElementById('modalGovBtn');
     const modalSaveBtn = document.getElementById('modalSaveBtn');
     const editStatus = document.getElementById('editStatus');
     let editingId = null;
@@ -601,6 +595,7 @@
       });
       editStatus.className = 'alert d-none';
       modalPrintBtn.classList.add('d-none');
+      modalGovBtn.classList.add('d-none');
       modalSaveBtn.disabled = false;
       editModal.show();
     }
@@ -612,15 +607,22 @@
     }
 
     eCompany.addEventListener('change', () => fillClients(''));
-    // أي تعديل بعد الحفظ → لازم يحفظ تاني قبل الطباعة
-    editForm.addEventListener('input', () => modalPrintBtn.classList.add('d-none'));
-    editForm.addEventListener('change', () => modalPrintBtn.classList.add('d-none'));
+    
+    // إخفاء زراير الطباعة والوزارة عند أي تعديل جديد[cite: 5]
+    editForm.addEventListener('input', () => {
+      modalPrintBtn.classList.add('d-none');
+      modalGovBtn.classList.add('d-none');
+    });
+    editForm.addEventListener('change', () => {
+      modalPrintBtn.classList.add('d-none');
+      modalGovBtn.classList.add('d-none');
+    });
 
     modalSaveBtn.addEventListener('click', async () => {
       if (!editForm.checkValidity()) { editForm.reportValidity(); return; }
       const d = readEditForm();
       const params = new URLSearchParams();
-      params.append('action', 'addTrip');       // نفس trip_id = تحديث الصف الموجود
+      params.append('action', 'addTrip');
       params.append('trip_id', editingId);
       params.append('token', SESSION.token);
       FIELDS.forEach(k => params.append(k, d[k] || ''));
@@ -636,6 +638,7 @@
         renderPermitsTable();
         showEditStatus('✔ تم حفظ التعديل في الشيت', 'success');
         modalPrintBtn.classList.remove('d-none');
+        modalGovBtn.classList.remove('d-none'); // 🔹 إظهار زر تسجيل وزارة بعد الحفظ الناجح
       } catch (err) {
         console.error(err);
         showEditStatus('⚠ تعذر الحفظ، حاول مرة تانية', 'danger');
@@ -645,6 +648,96 @@
     });
 
     modalPrintBtn.addEventListener('click', () => printNotice(readEditForm()));
+
+    // ================= منطق تسجيل الوزارة =================
+    const GOOGLE_FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLScSHU-SGwRzD06BtRkS-WxwS-G6JWrm37CrU2WYC__sAncfKA/formResponse';
+
+    const PAGE_HISTORY_BY_CAR = {
+      'اوتوبيس': '0,1,6', 'كوستر': '0,2,6', 'ميني باص': '0,3,6',
+      'ميكروباص': '0,4,6', 'هاي اس': '0,4,6',
+      'ليموزين': '0,5,6', 'دفع رباعي': '0,5,6'
+    };
+    const CAR_TYPE_MAP = {
+      'اوتوبيس': 'اتوبيس سياحي', 'كوستر': 'كوستر', 'ميني باص': 'ميني باص',
+      'ميكروباص': 'ميكروباص', 'هاي اس': 'هاي اس', 'ليموزين': 'ليموزين', 'دفع رباعي': 'دفع رباعي'
+    };
+    const PAX_ENTRY_BY_CAR = {
+      'اوتوبيس': 'entry.1177081991', 'كوستر': 'entry.1113687347', 'ميني باص': 'entry.1881561870',
+      'ميكروباص': 'entry.431788748', 'هاي اس': 'entry.431788748',
+      'ليموزين': 'entry.1439378422', 'دفع رباعي': 'entry.1439378422'
+    };
+    const FIXED_NATIONALITY = 'ألمانيا';
+    const FIXED_APPLICANT_ROLE = 'مندوب سياحة خارجية';
+
+    function toEnDigits(s) {
+      return String(s || '')
+        .replace(/[٠-٩]/g, c => c.charCodeAt(0) - 0x0660)
+        .replace(/[۰-۹]/g, c => c.charCodeAt(0) - 0x06F0);
+    }
+
+    function buildGoogleFormBody(d, companyLicense) {
+      const body = new URLSearchParams();
+      const add = (entry, v) => { if (entry && v !== undefined && v !== null && v !== '') body.append(entry, v); };
+
+      const carType = d.car_type || '';
+      const license = toEnDigits(companyLicense).replace(/\D/g, '');
+      const pax = toEnDigits(d.pax_count || '1');
+
+      add('entry.1748033039', d.from_location);
+      add('entry.1485870053', d.to_location);
+      add('entry.1757055921', d.company_name);
+      add('entry.1599411303', license);
+      add('entry.1484896930', (d.car_name || '').trim());
+      add('entry.1829075331', license);
+      add('entry.458600585', CAR_TYPE_MAP[carType] || carType);
+      add(PAX_ENTRY_BY_CAR[carType], pax);
+
+      const plateLetters = (d.car_plate || '').replace(/[\d\s\-\/\.]+/g, '').split('').join(' ');
+      add('entry.100837855', plateLetters);
+      add('entry.1699758489', toEnDigits(d.car_number).replace(/\D/g, ''));
+      add('entry.342115608', toEnDigits(d.chassis_number).replace(/\s+/g, ''));
+
+      add('entry.1971436968', FIXED_NATIONALITY);
+      add('entry.1253472782', toEnDigits(d.driver_phone).replace(/\D/g, ''));
+      add('entry.2118850643', FIXED_APPLICANT_ROLE);
+
+      if (PAGE_HISTORY_BY_CAR[carType]) body.append('pageHistory', PAGE_HISTORY_BY_CAR[carType]);
+      return body;
+    }
+
+    async function sendToGoogleForm(d, companyLicense) {
+      const phone = toEnDigits(d.driver_phone).replace(/\D/g, '');
+      if (phone.length > 0 && phone.length < 10) return '⚠ رقم السائق غير مكتمل، لم يُرسل للفورم';
+      try {
+        await fetch(GOOGLE_FORM_ACTION, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: buildGoogleFormBody(d, companyLicense)
+        });
+        return true;
+      } catch (err) {
+        console.error(err);
+        return '❌ تعذر الإرسال للفورم، تأكد من الإنترنت';
+      }
+    }
+
+    modalGovBtn.addEventListener('click', async () => {
+      const d = readEditForm();
+      const comp = companiesStore[d.company_name] || {};
+      const license = comp.license || '';
+
+      modalGovBtn.disabled = true;
+      showEditStatus('جاري التسجيل في فورم الوزارة...', 'info');
+
+      const result = await sendToGoogleForm(d, license);
+      if (result === true) {
+        showEditStatus('✔ تم التسجيل في فورم الوزارة بنجاح', 'success');
+      } else {
+        showEditStatus(result, 'danger');
+      }
+      modalGovBtn.disabled = false;
+    });
 
     async function deleteTrip(p) {
       const label = `${p.client_name || ''} - ${p.to_location || ''} (${normalizeDateString(p.trip_date)})`;
@@ -688,3 +781,4 @@
   </script>
 </body>
 </html>
+```[cite: 5]
