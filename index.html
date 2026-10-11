@@ -685,16 +685,16 @@
         if (data && data.error === 'expired') return authFail();
         if (Array.isArray(data) && data.length > 0) {
           const cars = data.map(item => ({
-            company: item.company_name || '',
-            carType: item.car_type || '',
-            carName: item.car_name || '',
-            carPlate: item.car_plate || '',
-            carNumber: item.car_number || '',
-            chassisNumber: item.chassis_number || '',
-            driverName: item.driver_name || '',
-            driverPhone: item.driver_phone || '',
-            backupDriverName: item.backup_driver_name || '',
-            backupDriverPhone: item.backup_driver_phone || ''
+            company: String(item.company_name || ''),
+            carType: String(item.car_type || ''),
+            carName: String(item.car_name || ''),
+            carPlate: String(item.car_plate || ''),
+            carNumber: String(item.car_number || ''),
+            chassisNumber: String(item.chassis_number || ''),
+            driverName: String(item.driver_name || ''),
+            driverPhone: String(item.driver_phone || ''),
+            backupDriverName: String(item.backup_driver_name || ''),
+            backupDriverPhone: String(item.backup_driver_phone || '')
           }));
           localStorage.setItem('registeredCars', JSON.stringify(cars));
         }
@@ -1104,16 +1104,16 @@
               `;
 
               item.addEventListener('click', function() {
-                // 🔹 تم إزالة تعديل الشركة والعميل من هنا بناءً على طلبك لتبقى ثابتة ولا تتأثر باختيار السيارة
-                document.getElementById('car_type').value = car.carType || '';
-                document.getElementById('car_name').value = car.carName || '';
-                document.getElementById('car_plate').value = car.carPlate || '';
-                document.getElementById('car_number').value = car.carNumber || '';
-                document.getElementById('chassis_number').value = car.chassisNumber || '';
-                document.getElementById('driver_name').value = car.driverName || '';
-                document.getElementById('driver_phone').value = car.driverPhone || '';
-                document.getElementById('backup_driver_name').value = car.backupDriverName || '';
-                document.getElementById('backup_driver_phone').value = car.backupDriverPhone || '';
+                // 🔹 ضمان تعيين القيم كنصوص كاملة (مع الحفاظ على الأصفار في البداية)
+                document.getElementById('car_type').value = String(car.carType || '');
+                document.getElementById('car_name').value = String(car.carName || '');
+                document.getElementById('car_plate').value = String(car.carPlate || '');
+                document.getElementById('car_number').value = String(car.carNumber || '');
+                document.getElementById('chassis_number').value = String(car.chassisNumber || '');
+                document.getElementById('driver_name').value = String(car.driverName || '');
+                document.getElementById('driver_phone').value = String(car.driverPhone || '');
+                document.getElementById('backup_driver_name').value = String(car.backupDriverName || '');
+                document.getElementById('backup_driver_phone').value = String(car.backupDriverPhone || '');
 
                 suggestionsBox.classList.add('d-none');
                 carSearchInput.value = '';
