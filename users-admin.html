@@ -370,7 +370,9 @@
       usersList.forEach((u, index) => {
         const tr = document.createElement('tr');
         const isActive = u.active !== false && u.active !== 'false';
-        const companiesStr = Array.isArray(u.companies) ? u.companies.join(', ') : (u.companies || '-');
+        const idToName = {};
+        companiesList.forEach(c => { idToName[c.company_id] = c.company_name; });
+        const companiesStr = (u.company_ids || []).map(id => idToName[id] || id).join(', ') || '-';
 
         tr.innerHTML = `
           <td>${index + 1}</td>
@@ -435,12 +437,12 @@
         try {
           const hash = await derive(username, password);
           const res = await apiCall('createUser', { username, hash, name, role, active });
-          if (res && res.status === 'success' || res.ok) {
+          if (res && res.status === 'success') {
             showSuccess('✔ تمت إضافة المستخدم بنجاح');
             userModal.hide();
             loadData();
           } else {
-            showError(res.message || 'تعذر إضافة المستخدم');
+            showError((res && (res.error || res.message)) || 'تعذر إضافة المستخدم');
           }
         } catch (err) {
           console.error(err);
@@ -450,12 +452,12 @@
         // تعديل يوزر قائم
         try {
           const res = await apiCall('updateUser', { username: currentEditingUsername, name, role, active });
-          if (res && res.status === 'success' || res.ok) {
+          if (res && res.status === 'success') {
             showSuccess('✔ تم تحديث بيانات المستخدم بنجاح');
             userModal.hide();
             loadData();
           } else {
-            showError(res.message || 'تعذر التحديث');
+            showError((res && (res.error || res.message)) || 'تعذر التحديث');
           }
         } catch (err) {
           console.error(err);
@@ -473,12 +475,12 @@
       const container = document.getElementById('companiesCheckboxesContainer');
       container.innerHTML = '';
 
-      const userCompanies = Array.isArray(u.companies) ? u.companies : (u.companies ? [u.companies] : []);
+      const userCompanies = Array.isArray(u.company_ids) ? u.company_ids : [];
 
       companiesList.forEach(comp => {
         const compId = comp.company_id || comp.id || comp.company_name;
         const compName = comp.company_name || comp.name || compId;
-        const isChecked = userCompanies.includes(compId) || userCompanies.includes(compName);
+        const isChecked = userCompanies.includes(compId);
 
         const div = document.createElement('div');
         div.className = 'form-check';
@@ -500,14 +502,14 @@
       try {
         const res = await apiCall('setUserCompanies', {
           username: currentEditingUsername,
-          companies: JSON.stringify(selectedCompanies)
+          company_ids: selectedCompanies.join(',')
         });
-        if (res && res.status === 'success' || res.ok) {
+        if (res && res.status === 'success') {
           showSuccess('✔ تم تحديث شركات المستخدم بنجاح');
           companiesModal.hide();
           loadData();
         } else {
-          showError(res.message || 'تعذر تعيين الشركات');
+          showError('تعذر تعيين الشركات: ' + ((res && (res.error || res.message)) || 'خطأ غير معروف'));
         }
       } catch (err) {
         console.error(err);
@@ -531,11 +533,11 @@
       try {
         const hash = await derive(currentEditingUsername, newPassword);
         const res = await apiCall('resetPassword', { username: currentEditingUsername, hash });
-        if (res && res.status === 'success' || res.ok) {
+        if (res && res.status === 'success') {
           showSuccess('✔ تم تغيير كلمة المرور بنجاح');
           resetPasswordModal.hide();
         } else {
-          showError(res.message || 'تعذر تغيير كلمة المرور');
+          showError((res && (res.error || res.message)) || 'تعذر تغيير كلمة المرور');
         }
       } catch (err) {
         console.error(err);
