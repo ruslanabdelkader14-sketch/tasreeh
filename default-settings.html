@@ -252,6 +252,11 @@
         </div>
 
         <div class="mb-3">
+          <label for="companyIdDisplay" class="form-label">معرف الشركة (Company ID)</label>
+          <input type="text" class="form-control" id="companyIdDisplay" readonly disabled placeholder="يتم توليده تلقائياً">
+        </div>
+
+        <div class="mb-3">
           <label for="companyName" class="form-label">اسم الشركة</label>
           <input type="text" class="form-control" id="companyName" placeholder="اسم الشركة" required>
         </div>
@@ -316,7 +321,7 @@
       </a>
 
       <a href="default-settings.html" class="nav-link-custom active-link text-start py-3 px-3 fw-bold d-flex align-items-center justify-content-between">
-        <span>⚙️️ البيانات الافتراضية</span>
+        <span>⚙ البيانات الافتراضية</span>
         <span>←</span>
       </a>
 
@@ -334,6 +339,7 @@
   const newCompanyNameInput = document.getElementById('newCompanyNameInput');
   const activeCompanyTitle = document.getElementById('activeCompanyTitle');
 
+  const companyIdDisplayInput = document.getElementById('companyIdDisplay');
   const companyNameInput = document.getElementById('companyName');
   const companyLicenseInput = document.getElementById('companyLicense');
   const negotiatorNameInput = document.getElementById('negotiatorName');
@@ -354,8 +360,7 @@
   let activeCompanyKey = localStorage.getItem('activeCompanyKey') || '';
   const pendingNew = new Set(); // شركات اتضافت في الصفحة ولسه ماتحفظتش في الشيت
 
-  // ---------- التوكن (اللي اتحفظ وقت تسجيل الدخول) ----------
-  // التوكن شكله uuid ورا uuid، فبندور عليه في أي مكان متخزن (حتى لو جوه JSON)
+  // ---------- التحقق من الصلاحيات والتوكن ----------
   const TOKEN_RE = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}){2}$/i;
   let tokenKeyUsed = '';
 
@@ -388,6 +393,13 @@
     return '';
   }
 
+  // التحقق من أن المستخدم admin، وإلا يتم توجيهه أو إخفاء الصفحة
+  const SESSION = JSON.parse(sessionStorage.getItem('session') || localStorage.getItem('session') || 'null');
+  if (!SESSION || SESSION.role !== 'admin') {
+    location.replace('index.html');
+    return;
+  }
+
   function storageKeys() {
     const out = [];
     for (const [n, st] of [['session', sessionStorage], ['local', localStorage]]) {
@@ -396,7 +408,6 @@
     return out.join(', ') || '(فاضي)';
   }
 
-  // مابنحوّلش لصفحة الدخول تلقائياً، بنعرض السبب الأول عشان نعرف المشكلة فين
   function goLogin(reason) {
     alertError.textContent = '';
     const msg = document.createElement('div');
@@ -445,6 +456,7 @@
     const store = {};
     list.forEach(c => {
       store[c.company_name] = {
+        companyId: String(c.company_id || ''),
         license: c.license || '',
         negotiatorName: c.negotiator_name || '',
         negotiatorNationalId: c.negotiator_national_id || '',
@@ -466,7 +478,6 @@
     return data;
   }
 
-  // نسخة محلية عشان باقي الصفحات اللي لسه بتقرأ من localStorage تفضل شغالة
   function mirrorLocal() {
     localStorage.setItem('companiesSettingsStore', JSON.stringify(companiesStore));
     localStorage.setItem('activeCompanyKey', activeCompanyKey || '');
@@ -493,9 +504,10 @@
   }
 
   function loadActiveCompanyData() {
-    const data = companiesStore[activeCompanyKey] || { license: '', negotiatorName: '', negotiatorNationalId: '', clients: [] };
+    const data = companiesStore[activeCompanyKey] || { companyId: '', license: '', negotiatorName: '', negotiatorNationalId: '', clients: [] };
 
     activeCompanyTitle.textContent = activeCompanyKey ? `📝 إعدادات شركة: (${activeCompanyKey})` : '📝 إعدادات الشركة';
+    companyIdDisplayInput.value = data.companyId || '';
     companyNameInput.value = activeCompanyKey || '';
     companyLicenseInput.value = data.license || '';
     negotiatorNameInput.value = data.negotiatorName || '';
@@ -529,7 +541,7 @@
   }
 
   function addClient() {
-    const val = clientInput.value.trim().replace(/\|/g, '/'); // الفاصل | محجوز للشيت
+    const val = clientInput.value.trim().replace(/\|/g, '/');
     if (val && activeCompanyKey) {
       const co = companiesStore[activeCompanyKey];
       if (!co.clients) co.clients = [];
@@ -553,7 +565,7 @@
     const newCompName = newCompanyNameInput.value.trim();
     if (!newCompName) return;
     if (!companiesStore[newCompName]) {
-      companiesStore[newCompName] = { license: '', negotiatorName: '', negotiatorNationalId: '', clients: [] };
+      companiesStore[newCompName] = { companyId: '', license: '', negotiatorName: '', negotiatorNationalId: '', clients: [] };
       pendingNew.add(newCompName);
     }
     newCompanyNameInput.value = '';
@@ -572,8 +584,9 @@
       return;
     }
 
+    const currentData = companiesStore[activeCompanyKey] || {};
     const entry = {
-      ...companiesStore[activeCompanyKey],
+      ...currentData,
       license: companyLicenseInput.value.trim(),
       negotiatorName: negotiatorNameInput.value.trim(),
       negotiatorNationalId: negotiatorNationalIdInput.value.trim()
@@ -582,8 +595,9 @@
 
     setBusy(true);
     try {
-      await postAction({
+      const respData = await postAction({
         action: 'saveCompany',
+        company_id: entry.companyId || '',
         old_name: oldName,
         company_name: newName,
         license: entry.license,
@@ -592,13 +606,23 @@
         clients: (entry.clients || []).join(' | ')
       });
 
-      // نتأكد إن البيانات فعلاً اتكتبت في الشيت
+      // إذا وُلِد ID جديد من السيرفر، يتم قراءته وتحديث البيانات
+      if (respData && respData.company_id) {
+        entry.companyId = String(respData.company_id);
+      }
+
       const fresh = await fetchCompanies();
       const saved = fresh[newName];
       if (!saved || saved.license !== entry.license || saved.negotiatorName !== entry.negotiatorName ||
           saved.negotiatorNationalId !== entry.negotiatorNationalId ||
           saved.clients.join('|') !== (entry.clients || []).join('|')) {
         throw new Error('verify');
+      }
+
+      if (respData && respData.company_id) {
+        entry.companyId = String(respData.company_id);
+      } else if (saved.companyId) {
+        entry.companyId = String(saved.companyId);
       }
 
       if (newName !== activeCompanyKey) delete companiesStore[activeCompanyKey];
@@ -631,10 +655,11 @@
     if (!confirm(`متأكد إنك عايز تحذف شركة "${activeCompanyKey}" وعملائها؟\n(الرحلات القديمة هتفضل زي ما هي)`)) return;
 
     const name = activeCompanyKey;
+    const compId = companiesStore[name]?.companyId || '';
     setBusy(true);
     try {
       if (!pendingNew.has(name)) {
-        await postAction({ action: 'deleteCompany', company_name: name });
+        await postAction({ action: 'deleteCompany', company_id: compId, company_name: name });
       }
       pendingNew.delete(name);
       delete companiesStore[name];
