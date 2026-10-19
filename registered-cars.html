@@ -153,9 +153,6 @@
         <label class="form-label fw-bold">الشركة:</label>
         <select id="companyFilter" class="form-select">
           <option value="">جميع الشركات</option>
-          <option value="افريكان اكسبريس">افريكان اكسبريس</option>
-          <option value="أي ديال تورز">أي ديال تورز</option>
-          <option value="فوياج">فوياج</option>
         </select>
       </div>
     </div>
@@ -202,9 +199,6 @@
               <div class="col-md-6">
                 <label class="form-label">الشركة <span class="text-danger">*</span></label>
                 <select class="form-select" id="modalCompany" required>
-                  <option value="افريكان اكسبريس">افريكان اكسبريس</option>
-                  <option value="أي ديال تورز">أي ديال تورز</option>
-                  <option value="فوياج">فوياج</option>
                 </select>
               </div>
               <div class="col-md-6">
@@ -281,7 +275,38 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec';
 
     let cars = JSON.parse(localStorage.getItem('registeredCars')) || [];
+    let companies = [];
     const carModal = new bootstrap.Modal(document.getElementById('carModal'));
+
+    // دالة ملء القوائم المنسدلة الخاصة بالشركات
+    function populateCompanyOptions() {
+      const companyFilter = document.getElementById('companyFilter');
+      const modalCompany = document.getElementById('modalCompany');
+
+      const filterVal = companyFilter.value;
+      const modalVal = modalCompany.value;
+
+      companyFilter.innerHTML = '<option value="">جميع الشركات</option>';
+      modalCompany.innerHTML = '';
+
+      companies.forEach(comp => {
+        const cId = String(comp.company_id || '');
+        const cName = comp.company_name || '';
+
+        const opt1 = document.createElement('option');
+        opt1.value = cId;
+        opt1.textContent = cName;
+        companyFilter.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = cId;
+        opt2.textContent = cName;
+        modalCompany.appendChild(opt2);
+      });
+
+      if (filterVal) companyFilter.value = filterVal;
+      if (modalVal) modalCompany.value = modalVal;
+    }
 
     // دالة جلب وقراءة البيانات من Google Sheets
     async function fetchCarsFromSheet() {
@@ -292,8 +317,23 @@
         const response = await fetch(SCRIPT_URL);
         const data = await response.json();
 
-        if (Array.isArray(data) && data.length > 0) {
-          cars = data.map(item => ({
+        // التعامل مع استجابة الكائن المحتوي على الشركات والسيارات إن وجد
+        let carsArray = [];
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          if (Array.isArray(data.companies)) {
+            companies = data.companies;
+            populateCompanyOptions();
+          }
+          if (Array.isArray(data.cars)) {
+            carsArray = data.cars;
+          }
+        } else if (Array.isArray(data)) {
+          carsArray = data;
+        }
+
+        if (carsArray.length > 0) {
+          cars = carsArray.map(item => ({
+            companyId: String(item.company_id || ''),
             company: item.company_name || '',
             carType: item.car_type || '',
             carName: item.car_name || '',
@@ -327,13 +367,13 @@
       tbody.innerHTML = '';
 
       const filterText = document.getElementById('searchInput').value.toLowerCase();
-      const selectedCompany = document.getElementById('companyFilter').value;
+      const selectedCompanyId = String(document.getElementById('companyFilter').value || '');
 
       let visibleIndex = 1;
 
       cars.forEach((car, index) => {
-        // فلترة بالشركة
-        if (selectedCompany && car.company !== selectedCompany) return;
+        // فلترة بـ company_id
+        if (selectedCompanyId && String(car.companyId || '') !== selectedCompanyId) return;
 
         // فلترة بالبحث النصي
         const matches = 
@@ -379,8 +419,12 @@
       e.preventDefault();
       
       const index = document.getElementById('carIndex').value;
+      const selectedId = String(document.getElementById('modalCompany').value || '');
+      const matchedComp = companies.find(c => String(c.company_id || '') === selectedId);
+
       const carData = {
-        company: document.getElementById('modalCompany').value,
+        companyId: selectedId,
+        company: matchedComp ? matchedComp.company_name : (document.getElementById('modalCompany').options[document.getElementById('modalCompany').selectedIndex]?.text || ''),
         carType: document.getElementById('modalCarType').value,
         carName: document.getElementById('modalCarName').value,
         carPlate: document.getElementById('modalCarPlate').value,
@@ -414,7 +458,9 @@
     function editCar(index) {
       const car = cars[index];
       document.getElementById('carIndex').value = index;
-      document.getElementById('modalCompany').value = car.company || 'افريكان اكسبريس';
+      if (car.companyId) {
+        document.getElementById('modalCompany').value = String(car.companyId);
+      }
       document.getElementById('modalCarType').value = car.carType || '';
       document.getElementById('modalCarName').value = car.carName || '';
       document.getElementById('modalCarPlate').value = car.carPlate || '';
