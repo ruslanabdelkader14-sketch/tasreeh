@@ -127,7 +127,7 @@
     <!-- الهيدر -->
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border-subtle) !important;">
       <h3 class="mb-0 fw-bold page-title">📋 تصاريح آخر 72 ساعة</h3>
-      <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←[cite: 5]</a>
+      <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←</a>
     </div>
 
     <!-- أدوات التحكم والفلترة -->
@@ -144,10 +144,6 @@
         <label class="form-label fw-bold">الشركة:</label>
         <select id="companyFilter" class="form-select">
           <option value="">جميع الشركات</option>
-          <option value="افريكان اكسبريس">افريكان اكسبريس</option>
-          <option value="أي ديال تورز">أي ديال تورز</option>
-          <option value="سيفين">سيفين</option>
-          <option value="فوياج">فوياج</option>
         </select>
       </div>
 
@@ -245,7 +241,7 @@
           </tr>
         </thead>
         <tbody id="permitsTableBody">
-          <tr><td colspan="13" class="text-center">جاري تحميل البيانات من الشيت...[cite: 5]</td></tr>
+          <tr><td colspan="13" class="text-center">جاري تحميل البيانات من الشيت...</td></tr>
         </tbody>
       </table>
     </div>
@@ -272,7 +268,7 @@
         <div class="modal-body">
           <form id="editForm" onsubmit="return false">
             <div class="row g-3">
-              <div class="col-md-4"><label class="form-label">اسم الشركة</label><select class="form-select" name="company_name" id="e_company_name"></select></div>
+              <div class="col-md-4"><label class="form-label">اسم الشركة</label><select class="form-select" name="company_id" id="e_company_id"></select></div>
               <div class="col-md-4"><label class="form-label">العميل</label><select class="form-select" name="client_name" id="e_client_name"></select></div>
               <div class="col-md-4"><label class="form-label">تاريخ الرحلة</label><input type="date" class="form-control" name="trip_date" required></div>
 
@@ -322,14 +318,14 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec";
 
-    // 🔒 لازم جلسة دخول سارية (نفس index.html)[cite: 5]
+    // 🔒 لازم جلسة دخول سارية (نفس index.html)
     const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
     if (!SESSION) location.replace('login.html');
     function authFail() { sessionStorage.removeItem('session'); location.replace('login.html'); }
 
     const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // نفس بيانات الشركات في index.html (لازم تفضل متطابقة)[cite: 5]
+    // نفس بيانات الشركات في index.html (لازم تفضل متطابقة)
     const defaultCompaniesData = {
       "افريكان اكسبريس": { license: "454", negotiatorName: "عمرو خالد", negotiatorNationalId: "29801011234567", clients: ["سامح", "حجيج", "افريكان"] },
       "أي ديال تورز": { license: "1061", negotiatorName: "روسلان ميسرة", negotiatorNationalId: "29505051234567", clients: ["عميل 1"] },
@@ -345,8 +341,38 @@
     };
 
     let permits = [];
+    let companies = [];
 
-    // دالة تحويل مختلف صيغ التاريخ إلى صيغة YYYY-MM-DD المقبولة في المقارنة[cite: 5]
+    function populateCompanyOptions() {
+      const companyFilter = document.getElementById('companyFilter');
+      const eCompany = document.getElementById('e_company_id');
+
+      const filterVal = companyFilter.value;
+      const modalVal = eCompany.value;
+
+      companyFilter.innerHTML = '<option value="">جميع الشركات</option>';
+      eCompany.innerHTML = '';
+
+      companies.forEach(comp => {
+        const cId = String(comp.company_id || '');
+        const cName = comp.company_name || '';
+
+        const opt1 = document.createElement('option');
+        opt1.value = cId;
+        opt1.textContent = cName;
+        companyFilter.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = cId;
+        opt2.textContent = cName;
+        eCompany.appendChild(opt2);
+      });
+
+      if (filterVal) companyFilter.value = filterVal;
+      if (modalVal) eCompany.value = modalVal;
+    }
+
+    // دالة تحويل مختلف صيغ التاريخ إلى صيغة YYYY-MM-DD المقبولة في المقارنة
     function normalizeDateString(dateVal) {
       if (!dateVal) return '';
       let str = String(dateVal).trim();
@@ -386,7 +412,7 @@
       return str;
     }
 
-    // جلب البيانات مباشرة من الشيت عبر الـ Web App[cite: 5]
+    // جلب البيانات مباشرة من الشيت عبر الـ Web App
     async function fetchTripsFromSheet() {
       const token = (SESSION && SESSION.token) || '';
 
@@ -394,8 +420,21 @@
         const response = await fetch(`${WEB_APP_URL}?token=${encodeURIComponent(token)}&sheet=trips`);
         const data = await response.json();
 
-        if (Array.isArray(data)) {
-          permits = data;
+        let tripsArray = [];
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          if (Array.isArray(data.companies)) {
+            companies = data.companies;
+            populateCompanyOptions();
+          }
+          if (Array.isArray(data.trips)) {
+            tripsArray = data.trips;
+          }
+        } else if (Array.isArray(data)) {
+          tripsArray = data;
+        }
+
+        if (tripsArray.length > 0 || Array.isArray(data)) {
+          permits = tripsArray;
           renderPermitsTable();
         } else if (data && data.error === 'expired') {
           authFail();
@@ -421,7 +460,7 @@
       const currentTime = new Date().getTime();
 
       const filterText = document.getElementById('searchInput').value.toLowerCase().trim();
-      const selectedCompany = document.getElementById('companyFilter').value.trim();
+      const selectedCompanyId = String(document.getElementById('companyFilter').value || '').trim();
       
       const startDateInput = document.getElementById('startDate').value;
       const endDateInput = document.getElementById('endDate').value;
@@ -445,7 +484,7 @@
           }
         }
 
-        if (selectedCompany && String(permit.company_name || '').trim() !== selectedCompany) {
+        if (selectedCompanyId && String(permit.company_id || '').trim() !== selectedCompanyId) {
           return;
         }
 
@@ -526,7 +565,7 @@
       });
     }
 
-    // ================= تعديل / حذف / طباعة[cite: 5] =================
+    // ================= تعديل / حذف / طباعة =================
     function actionsCell(p) {
       const id = esc(p.trip_id || '');
       if (!id) return '<span class="text-muted small" title="رحلة قديمة بدون رقم تعريف">—</span>';
@@ -537,13 +576,16 @@
     }
 
     const findPermit = id => permits.find(p => String(p.trip_id) === String(id));
-    const FIELDS = ['company_name','client_name','trip_type','from_location','to_location','trip_date','nationality','pax_count',
+    const FIELDS = ['company_id','client_name','trip_type','from_location','to_location','trip_date','nationality','pax_count',
       'car_type','car_name','car_plate','car_number','chassis_number','guide_name','guide_phone','driver_name','driver_phone',
       'backup_driver_name','backup_driver_phone','departure_time','program_details'];
 
     function printNotice(d) {
-      const comp = companiesStore[d.company_name] || {};
+      const matchedComp = companies.find(c => String(c.company_id || '') === String(d.company_id || '')) || {};
+      const compName = matchedComp.company_name || d.company_name || '';
+      const comp = companiesStore[compName] || {};
       const data = Object.assign({}, d, {
+        company_name: compName,
         company_license: comp.license || '',
         negotiator_name: comp.negotiatorName || '',
         negotiator_id: comp.negotiatorNationalId || ''
@@ -555,7 +597,7 @@
     const editModalEl = document.getElementById('editModal');
     const editModal = new bootstrap.Modal(editModalEl);
     const editForm = document.getElementById('editForm');
-    const eCompany = document.getElementById('e_company_name');
+    const eCompany = document.getElementById('e_company_id');
     const eClient = document.getElementById('e_client_name');
     const modalPrintBtn = document.getElementById('modalPrintBtn');
     const modalGovBtn = document.getElementById('modalGovBtn');
@@ -570,7 +612,10 @@
       sel.value = current || list[0] || '';
     }
     function fillClients(current) {
-      const c = companiesStore[eCompany.value];
+      const selectedId = String(eCompany.value || '');
+      const matchedComp = companies.find(c => String(c.company_id || '') === selectedId);
+      const compName = matchedComp ? matchedComp.company_name : '';
+      const c = companiesStore[compName];
       setOptions(eClient, (c && c.clients) || [], current);
     }
     function setSelect(name, val) {
@@ -585,12 +630,14 @@
 
     function openEdit(p) {
       editingId = String(p.trip_id);
-      const companies = [...new Set([...Object.keys(companiesStore), ...[...document.getElementById('companyFilter').options].map(o => o.value).filter(Boolean)])];
-      setOptions(eCompany, companies, p.company_name);
+      populateCompanyOptions();
+      if (p.company_id) {
+        eCompany.value = String(p.company_id);
+      }
       fillClients(p.client_name);
       ['trip_type','from_location','to_location','car_type'].forEach(n => setSelect(n, p[n]));
       FIELDS.forEach(n => {
-        if (['company_name','client_name','trip_type','from_location','to_location','car_type'].includes(n)) return;
+        if (['company_id','client_name','trip_type','from_location','to_location','car_type'].includes(n)) return;
         
         // 🔹 ضمان قراءة الحقول كنصوص صريحة للمحافظة على الأصفار في البداية (مثل أرقام الشاسيه ورقم العربية والهواتف)
         const val = p[n];
@@ -616,12 +663,14 @@
         }
         d[n] = val;
       });
+      const matchedComp = companies.find(c => String(c.company_id || '') === String(d.company_id || ''));
+      d.company_name = matchedComp ? matchedComp.company_name : '';
       return d;
     }
 
     eCompany.addEventListener('change', () => fillClients(''));
     
-    // إخفاء زراير الطباعة والوزارة عند أي تعديل جديد[cite: 5]
+    // إخفاء زراير الطباعة والوزارة عند أي تعديل جديد
     editForm.addEventListener('input', () => {
       modalPrintBtn.classList.add('d-none');
       modalGovBtn.classList.add('d-none');
@@ -639,6 +688,7 @@
       params.append('trip_id', editingId);
       params.append('token', SESSION.token);
       FIELDS.forEach(k => params.append(k, d[k] || ''));
+      params.append('company_name', d.company_name || '');
 
       modalSaveBtn.disabled = true;
       showEditStatus('جاري الحفظ...', 'info');
