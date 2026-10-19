@@ -318,20 +318,18 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec";
 
-    // 🔒 لازم جلسة دخول سارية (نفس index.html)
+    // 🔒 حماية الصفحة والتأكد من جلسة الدخول
     const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
     if (!SESSION) location.replace('login.html');
     function authFail() { sessionStorage.removeItem('session'); location.replace('login.html'); }
 
     const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // نفس بيانات الشركات في index.html (لازم تفضل متطابقة)
-    const defaultCompaniesData = {
+    let companiesStore = JSON.parse(localStorage.getItem('companiesSettingsStore')) || {
       "افريكان اكسبريس": { license: "454", negotiatorName: "عمرو خالد", negotiatorNationalId: "29801011234567", clients: ["سامح", "حجيج", "افريكان"] },
       "أي ديال تورز": { license: "1061", negotiatorName: "روسلان ميسرة", negotiatorNationalId: "29505051234567", clients: ["عميل 1"] },
       "فوياج": { license: "22112", negotiatorName: "شهاب", negotiatorNationalId: "29903031234567", clients: ["عميل فوياج 1"] }
     };
-    const companiesStore = JSON.parse(localStorage.getItem('companiesSettingsStore')) || defaultCompaniesData;
 
     const carPrices = {
       "ليموزين": 250,
@@ -372,7 +370,7 @@
       if (modalVal) eCompany.value = modalVal;
     }
 
-    // دالة تحويل مختلف صيغ التاريخ إلى صيغة YYYY-MM-DD المقبولة في المقارنة
+    // دالة تحويل مختلف صيغ التاريخ إلى YYYY-MM-DD
     function normalizeDateString(dateVal) {
       if (!dateVal) return '';
       let str = String(dateVal).trim();
@@ -412,7 +410,7 @@
       return str;
     }
 
-    // جلب البيانات مباشرة من الشيت عبر الـ Web App
+    // جلب البيانات مع الشركات المسموحة بناءً على صلاحيات اليوزر من السيرفر
     async function fetchTripsFromSheet() {
       const token = (SESSION && SESSION.token) || '';
 
@@ -424,6 +422,22 @@
         if (data && typeof data === 'object' && !Array.isArray(data)) {
           if (Array.isArray(data.companies)) {
             companies = data.companies;
+            // تحديث مخزون الشركات المحلي أيضاً ليتطابق مع صلاحيات السيرفر
+            const updatedStore = {};
+            companies.forEach(c => {
+              const name = String(c.company_name || '').trim();
+              if (name) {
+                updatedStore[name] = {
+                  company_id: String(c.company_id || ''),
+                  license: String(c.license || ''),
+                  negotiatorName: String(c.negotiator_name || ''),
+                  negotiatorNationalId: String(c.negotiator_national_id || ''),
+                  clients: Array.isArray(c.clients) ? c.clients : []
+                };
+              }
+            });
+            companiesStore = updatedStore;
+            localStorage.setItem('companiesSettingsStore', JSON.stringify(companiesStore));
             populateCompanyOptions();
           }
           if (Array.isArray(data.trips)) {
@@ -433,12 +447,12 @@
           tripsArray = data;
         }
 
-        if (tripsArray.length > 0 || Array.isArray(data)) {
+        if (tripsArray.length >= 0 || Array.isArray(data)) {
           permits = tripsArray;
           renderPermitsTable();
         } else if (data && data.error === 'expired') {
           authFail();
-        } else if (data.status === 'error') {
+        } else if (data && data.status === 'error') {
           document.getElementById('permitsTableBody').innerHTML = `<tr><td colspan="13" class="text-danger">خطأ: ${data.error || data.message}</td></tr>`;
         }
       } catch (err) {
@@ -638,8 +652,6 @@
       ['trip_type','from_location','to_location','car_type'].forEach(n => setSelect(n, p[n]));
       FIELDS.forEach(n => {
         if (['company_id','client_name','trip_type','from_location','to_location','car_type'].includes(n)) return;
-        
-        // 🔹 ضمان قراءة الحقول كنصوص صريحة للمحافظة على الأصفار في البداية (مثل أرقام الشاسيه ورقم العربية والهواتف)
         const val = p[n];
         editForm.elements[n].value = (val != null && val !== '') ? String(val) : (n === 'trip_date' ? normalizeDateString(p[n]) : '');
       });
@@ -654,8 +666,7 @@
       const d = {};
       FIELDS.forEach(n => {
         let val = editForm.elements[n].value;
-        // 🔹 التأكد من إرسال الأرقام التي تبدأ بأصفار كنصوص تمنع اقتطاع الصفر في الإكسل والشيت
-        if (['driver_phone', 'backup_driver_phone', 'driver_phone', 'chassis_number', 'car_number', 'guide_phone', 'car_plate'].includes(n)) {
+        if (['driver_phone', 'backup_driver_phone', 'chassis_number', 'car_number', 'guide_phone', 'car_plate'].includes(n)) {
           val = String(val).trim();
           if (/^0\d+/.test(val) && !val.startsWith("'")) {
             val = "'" + val;
@@ -670,7 +681,6 @@
 
     eCompany.addEventListener('change', () => fillClients(''));
     
-    // إخفاء زراير الطباعة والوزارة عند أي تعديل جديد
     editForm.addEventListener('input', () => {
       modalPrintBtn.classList.add('d-none');
       modalGovBtn.classList.add('d-none');
@@ -701,7 +711,7 @@
         renderPermitsTable();
         showEditStatus('✔ تم حفظ التعديل في الشيت', 'success');
         modalPrintBtn.classList.remove('d-none');
-        modalGovBtn.classList.remove('d-none'); // 🔹 إظهار زر تسجيل وزارة بعد الحفظ الناجح
+        modalGovBtn.classList.remove('d-none');
       } catch (err) {
         console.error(err);
         showEditStatus('⚠ تعذر الحفظ، حاول مرة تانية', 'danger');
