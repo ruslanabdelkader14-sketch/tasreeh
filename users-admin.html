@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة المستخدمين - African Express Travel</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+    :root {
+      --bg-warm: #F7F4EF;
+      --card-bg: #FFFFFF;
+      --text-main: #2C2523;
+      --border-subtle: #E8E2D9;
+      --primary-accent: #D96B43;
+      --primary-accent-hover: #C25832;
+      --secondary-accent: #5A4238;
+      --secondary-accent-hover: #45322A;
+      --header-bg: #FAF6F0;
+    }
+
+    body {
+      background-color: var(--bg-warm) !important;
+      color: var(--text-main);
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.6;
+    }
+
+    .main-container {
+      background-color: var(--card-bg);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .page-title {
+      color: var(--secondary-accent);
+    }
+
+    .section-title {
+      color: var(--secondary-accent);
+      font-size: 1.15rem;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 8px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--secondary-accent);
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      background-color: #FAFAFA;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background-color: #FFFFFF;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 0 0.25rem rgba(217, 107, 67, 0.15);
+    }
+
+    .btn-custom-orange {
+      background-color: var(--primary-accent);
+      color: #FFFFFF;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-custom-orange:hover {
+      background-color: var(--primary-accent-hover);
+      color: #FFFFFF;
+    }
+
+    .btn-outline-custom-brown {
+      color: var(--secondary-accent);
+      border: 1.5px solid var(--secondary-accent);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-outline-custom-brown:hover {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    .table-custom {
+      border-color: var(--border-subtle);
+    }
+
+    .table-custom thead {
+      background-color: var(--secondary-accent) !important;
+      color: #FFFFFF;
+    }
+
+    .table-custom th {
+      font-weight: 600;
+      padding: 12px;
+      border-bottom: none;
+    }
+
+    .table-custom td {
+      padding: 10px;
+    }
+
+    .modal-content {
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+
+    .modal-header-custom {
+      background-color: var(--secondary-accent);
+      color: #FFFFFF;
+    }
+
+    .alert-custom-success {
+      background-color: #E8F5E9;
+      border: 1px solid #C8E6C9;
+      color: #2E7D32;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body class="p-3 p-md-4">
+
+  <div class="container-fluid main-container p-4 rounded" style="max-width: 1100px;">
+    <!-- الهيدر أزرار الرجوع والتوجيه -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: var(--border-subtle) !important;">
+      <h3 class="mb-0 fw-bold page-title">👥 إدارة المستخدمين</h3>
+      <div>
+        <button class="btn btn-custom-orange me-2" data-bs-toggle="modal" data-bs-target="#userModal" onclick="resetUserForm()">+ إضافة يوزر جديد</button>
+        <a href="index.html" class="btn btn-outline-custom-brown fw-bold">العودة للرئيسية ←</a>
+      </div>
+    </div>
+
+    <!-- تنبيهات -->
+    <div id="alertSuccess" class="alert alert-custom-success d-none text-center fw-bold mb-4" role="alert"></div>
+    <div id="alertError" class="alert alert-danger d-none text-center fw-bold mb-4" role="alert"></div>
+
+    <!-- جدول عرض المستخدمين -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover text-center align-middle table-custom" id="usersTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>اسم المستخدم</th>
+            <th>الاسم</th>
+            <th>الصلاحية (Role)</th>
+            <th>الحالة</th>
+            <th>الشركات المعينة</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <tr><td colspan="7" class="text-center py-4 text-muted">جاري تحميل المستخدمين... ⏳</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal إضافة / تعديل مستخدم -->
+  <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title fw-bold" id="userModalTitle">إضافة يوزر جديد</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="userForm">
+            <div class="mb-3" id="usernameFieldContainer">
+              <label class="form-label">اسم المستخدم (Username) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="modalUsername" required autocomplete="off">
+            </div>
+
+            <div class="mb-3" id="passwordFieldContainer">
+              <label class="form-label">كلمة المرور <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="modalPassword" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الاسم المعروض <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="modalName" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الصلاحية (Role) <span class="text-danger">*</span></label>
+              <select class="form-select" id="modalRole" required>
+                <option value="user">مستخدم (User)</option>
+                <option value="admin">مدير (Admin)</option>
+              </select>
+            </div>
+
+            <div class="mb-3 form-check" id="activeStatusContainer">
+              <input type="checkbox" class="form-check-input" id="modalActive" checked>
+              <label class="form-check-label fw-bold" for="modalActive" style="color: var(--secondary-accent);">حساب مفعل</label>
+            </div>
+
+            <div class="modal-footer px-0 pb-0 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+              <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">إلغاء</button>
+              <button type="submit" class="btn btn-custom-orange px-4" id="saveUserBtn">حفظ</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal تعيين الشركات -->
+  <div class="modal fade" id="companiesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title fw-bold">🏢 تعيين الشركات للمستخدم: <span id="targetUsernameTitle"></span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="companiesForm">
+            <p class="text-muted small mb-3">اختر الشركات التي يُسمح لهذا المستخدم بالوصول إليها:</p>
+            <div id="companiesCheckboxesContainer" class="d-flex flex-column gap-2 mb-4" style="max-height: 300px; overflow-y: auto;">
+              <!-- تُضاف الـ Checkboxes ديناميكياً -->
+            </div>
+            <div class="modal-footer px-0 pb-0 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+              <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">إلغاء</button>
+              <button type="submit" class="btn btn-custom-orange px-4" id="saveCompaniesBtn">حفظ التعيينات</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal إعادة تعيين كلمة المرور -->
+  <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title fw-bold">🔑 إعادة تعيين كلمة المرور لـ: <span id="resetTargetUsernameTitle"></span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="resetPasswordForm">
+            <div class="mb-3">
+              <label class="form-label">كلمة المرور الجديدة <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="newPasswordInput" required>
+            </div>
+            <div class="modal-footer px-0 pb-0 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+              <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">إلغاء</button>
+              <button type="submit" class="btn btn-custom-orange px-4" id="savePasswordBtn">تحديث كلمة المرور</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec';
+    const LOGIN_PAGE = 'login.html';
+    const APP_SALT = 'aet-login-v1';
+    const ITERATIONS = 210000;
+
+    // التحقق من الجلسة والصلاحيات
+    const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
+    if (!SESSION) {
+      location.replace(LOGIN_PAGE);
+    } else if (SESSION.role !== 'admin') {
+      location.replace('index.html');
+    }
+
+    const token = SESSION.token;
+    let usersList = [];
+    let companiesList = [];
+    let currentEditingUsername = null;
+
+    const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+    const companiesModal = new bootstrap.Modal(document.getElementById('companiesModal'));
+    const resetPasswordModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+
+    const alertSuccess = document.getElementById('alertSuccess');
+    const alertError = document.getElementById('alertError');
+
+    function showSuccess(msg) {
+      alertSuccess.textContent = msg;
+      alertSuccess.classList.remove('d-none');
+      setTimeout(() => alertSuccess.classList.add('d-none'), 4000);
+    }
+
+    function showError(msg) {
+      alertError.textContent = msg;
+      alertError.classList.remove('d-none');
+      setTimeout(() => alertError.classList.add('d-none'), 6000);
+    }
+
+    // دالة derive لتشفير كلمة المرور بالمتصفح بنفس الطريقة تماماً
+    async function derive(username, password) {
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey('raw', enc.encode(password.normalize('NFKC')), 'PBKDF2', false, ['deriveBits']);
+      const bits = await crypto.subtle.deriveBits({
+        name: 'PBKDF2', hash: 'SHA-256', iterations: ITERATIONS,
+        salt: enc.encode(APP_SALT + ':' + username.trim().toLowerCase())
+      }, key, 256);
+      return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // إرسال الطلبات form-encoded مع التوكن
+    async function apiCall(action, extraData = {}) {
+      const params = new URLSearchParams({ token, action, ...extraData });
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+      });
+      const data = await res.json();
+      if (data && data.error === 'expired') {
+        sessionStorage.removeItem('session');
+        location.replace(LOGIN_PAGE);
+        throw new Error('expired');
+      }
+      return data;
+    }
+
+    async function loadData() {
+      try {
+        const [usersRes, compRes] = await Promise.all([
+          apiCall('listUsers'),
+          apiCall('listCompanies')
+        ]);
+
+        if (Array.isArray(usersRes)) {
+          usersList = usersRes;
+        } else if (usersRes && usersRes.users) {
+          usersList = usersRes.users;
+        }
+
+        if (Array.isArray(compRes)) {
+          companiesList = compRes;
+        } else if (compRes && compRes.companies) {
+          companiesList = compRes.companies;
+        }
+
+        renderUsersTable();
+      } catch (err) {
+        console.error(err);
+        showError('فشل تحميل البيانات من السيرفر.');
+      }
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = '';
+
+      if (!usersList || usersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">لا توجد مستخدمين مسجلين حالياً.</td></tr>';
+        return;
+      }
+
+      usersList.forEach((u, index) => {
+        const tr = document.createElement('tr');
+        const isActive = u.active !== false && u.active !== 'false';
+        const companiesStr = Array.isArray(u.companies) ? u.companies.join(', ') : (u.companies || '-');
+
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td class="fw-bold">${u.username}</td>
+          <td>${u.name || '-'}</td>
+          <td><span class="badge ${u.role === 'admin' ? 'bg-danger' : 'bg-secondary'}">${u.role}</span></td>
+          <td><span class="badge ${isActive ? 'bg-success' : 'bg-warning text-dark'}">${isActive ? 'مفعل' : 'موقف'}</span></td>
+          <td class="small text-muted" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${companiesStr}">${companiesStr}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning me-1 fw-bold" onclick="openEditUser('${u.username}')">تعديل</button>
+            <button class="btn btn-sm btn-outline-info me-1 fw-bold" onclick="openCompaniesModal('${u.username}')">الشركات</button>
+            <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="openResetPasswordModal('${u.username}')">الباسورد</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function resetUserForm() {
+      currentEditingUsername = null;
+      document.getElementById('userForm').reset();
+      document.getElementById('userModalTitle').innerText = 'إضافة يوزر جديد';
+      document.getElementById('usernameFieldContainer').style.display = 'block';
+      document.getElementById('passwordFieldContainer').style.display = 'block';
+      document.getElementById('modalUsername').disabled = false;
+      document.getElementById('modalPassword').required = true;
+      document.getElementById('activeStatusContainer').style.display = 'block';
+    }
+
+    function openEditUser(username) {
+      const u = usersList.find(x => x.username === username);
+      if (!u) return;
+
+      currentEditingUsername = username;
+      document.getElementById('userModalTitle').innerText = 'تعديل بيانات المستخدم';
+      document.getElementById('usernameFieldContainer').style.display = 'block';
+      document.getElementById('passwordFieldContainer').style.display = 'none'; // لا نطلب كلمة المرور عند التعديل العادي
+      document.getElementById('modalUsername').value = u.username;
+      document.getElementById('modalUsername').disabled = true;
+      document.getElementById('modalPassword').required = false;
+      document.getElementById('modalName').value = u.name || '';
+      document.getElementById('modalRole').value = u.role || 'user';
+      document.getElementById('modalActive').checked = u.active !== false && u.active !== 'false';
+      document.getElementById('activeStatusContainer').style.display = 'block';
+
+      userModal.show();
+    }
+
+    // إرسال نموذج إضافة أو تعديل يوزر
+    document.getElementById('userForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('modalName').value.trim();
+      const role = document.getElementById('modalRole').value;
+      const active = document.getElementById('modalActive').checked;
+
+      if (!currentEditingUsername) {
+        // إضافة يوزر جديد
+        const username = document.getElementById('modalUsername').value.trim();
+        const password = document.getElementById('modalPassword').value;
+        if (!username || !password) return;
+
+        try {
+          const hash = await derive(username, password);
+          const res = await apiCall('createUser', { username, hash, name, role, active });
+          if (res && res.status === 'success' || res.ok) {
+            showSuccess('✔ تمت إضافة المستخدم بنجاح');
+            userModal.hide();
+            loadData();
+          } else {
+            showError(res.message || 'تعذر إضافة المستخدم');
+          }
+        } catch (err) {
+          console.error(err);
+          showError('حدث خطأ أثناء الإضافة');
+        }
+      } else {
+        // تعديل يوزر قائم
+        try {
+          const res = await apiCall('updateUser', { username: currentEditingUsername, name, role, active });
+          if (res && res.status === 'success' || res.ok) {
+            showSuccess('✔ تم تحديث بيانات المستخدم بنجاح');
+            userModal.hide();
+            loadData();
+          } else {
+            showError(res.message || 'تعذر التحديث');
+          }
+        } catch (err) {
+          console.error(err);
+          showError('حدث خطأ أثناء التحديث');
+        }
+      }
+    });
+
+    // إدارة الشركات المعينة للمستخدم
+    function openCompaniesModal(username) {
+      currentEditingUsername = username;
+      const u = usersList.find(x => x.username === username);
+      document.getElementById('targetUsernameTitle').textContent = username;
+
+      const container = document.getElementById('companiesCheckboxesContainer');
+      container.innerHTML = '';
+
+      const userCompanies = Array.isArray(u.companies) ? u.companies : (u.companies ? [u.companies] : []);
+
+      companiesList.forEach(comp => {
+        const compId = comp.company_id || comp.id || comp.company_name;
+        const compName = comp.company_name || comp.name || compId;
+        const isChecked = userCompanies.includes(compId) || userCompanies.includes(compName);
+
+        const div = document.createElement('div');
+        div.className = 'form-check';
+        div.innerHTML = `
+          <input class="form-check-input user-company-checkbox" type="checkbox" value="${compId}" id="comp_${compId}" ${isChecked ? 'checked' : ''}>
+          <label class="form-check-label fw-bold" for="comp_${compId}">${compName}</label>
+        `;
+        container.appendChild(div);
+      });
+
+      companiesModal.show();
+    }
+
+    document.getElementById('companiesForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const checkboxes = document.querySelectorAll('.user-company-checkbox:checked');
+      const selectedCompanies = Array.from(checkboxes).map(cb => cb.value);
+
+      try {
+        const res = await apiCall('setUserCompanies', {
+          username: currentEditingUsername,
+          companies: JSON.stringify(selectedCompanies)
+        });
+        if (res && res.status === 'success' || res.ok) {
+          showSuccess('✔ تم تحديث شركات المستخدم بنجاح');
+          companiesModal.hide();
+          loadData();
+        } else {
+          showError(res.message || 'تعذر تعيين الشركات');
+        }
+      } catch (err) {
+        console.error(err);
+        showError('حدث خطأ أثناء حفظ الشركات');
+      }
+    });
+
+    // إعادة تعيين كلمة المرور
+    function openResetPasswordModal(username) {
+      currentEditingUsername = username;
+      document.getElementById('resetTargetUsernameTitle').textContent = username;
+      document.getElementById('newPasswordInput').value = '';
+      resetPasswordModal.show();
+    }
+
+    document.getElementById('resetPasswordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const newPassword = document.getElementById('newPasswordInput').value;
+      if (!newPassword) return;
+
+      try {
+        const hash = await derive(currentEditingUsername, newPassword);
+        const res = await apiCall('resetPassword', { username: currentEditingUsername, hash });
+        if (res && res.status === 'success' || res.ok) {
+          showSuccess('✔ تم تغيير كلمة المرور بنجاح');
+          resetPasswordModal.hide();
+        } else {
+          showError(res.message || 'تعذر تغيير كلمة المرور');
+        }
+      } catch (err) {
+        console.error(err);
+        showError('حدث خطأ أثناء تغيير كلمة المرور');
+      }
+    });
+
+    // تحميل البيانات عند فتح الصفحة
+    loadData();
+  </script>
+</body>
+</html>
