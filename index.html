@@ -401,7 +401,7 @@
         <span>📋 تصاريح آخر 72 ساعة</span>
         <span>←</span>
       </a>
-      <a href="default-settings.html" class="btn btn-outline-custom-brown text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between">
+      <a href="default-settings.html" id="companySettingsLink" class="btn btn-outline-custom-brown text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between">
         <span>⚙ البيانات الافتراضية</span>
         <span>←</span>
       </a>
@@ -658,7 +658,16 @@
     // 🔒 حماية الصفحة: لازم جلسة دخول سارية
     const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
     if (!SESSION) location.replace('login.html');
-    function authFail() { sessionStorage.removeItem('session'); location.replace('login.html'); }
+    const IS_ADMIN = !!SESSION && String(SESSION.role || '').trim().toLowerCase() === 'admin';
+
+    // مفاتيح localStorage الخاصة بالتطبيق (نفس القائمة في login.html)
+    const APP_STORAGE_KEYS = ['registeredCars', 'companiesSettingsStore', 'activeCompanyKey', 'tripTabsData',
+      'activeTripTabId', 'tripFormData', 'tripPermits', 'passengersList', 'lastSelectedCompany', 'lastSelectedClient'];
+    function clearAppStorage() {
+      APP_STORAGE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+    }
+
+    function authFail() { clearAppStorage(); sessionStorage.removeItem('session'); location.replace('login.html'); }
 
     const defaultCarsData = [
       {
@@ -703,9 +712,59 @@
       }
     }
 
+    // جلب الشركات من السيرفر (مفلترة حسب اليوزر) وحفظها في localStorage بنفس الشكل القديم + company_id
+    // يرجّع: كائن الشركات، أو null لو الجلب فشل، أو 'expired' لو الجلسة انتهت
+    async function loadCompaniesFromServer() {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
+      try {
+        const response = await fetch(GOOGLE_APP_SCRIPT_URL + '?sheet=companies&token=' + encodeURIComponent(SESSION.token), { signal: ctrl.signal });
+        const data = await response.json();
+        if (data && data.error === 'expired') { authFail(); return 'expired'; }
+        if (!Array.isArray(data)) return null;
+        const store = {};
+        data.forEach(c => {
+          const name = String(c.company_name || '').trim();
+          if (!name) return;
+          store[name] = {
+            company_id: String(c.company_id || ''),
+            license: String(c.license || ''),
+            negotiatorName: String(c.negotiator_name || ''),
+            negotiatorNationalId: String(c.negotiator_national_id || ''),
+            clients: Array.isArray(c.clients) ? c.clients : []
+          };
+        });
+        localStorage.setItem('companiesSettingsStore', JSON.stringify(store));
+        return store;
+      } catch (err) {
+        console.error('خطأ في جلب الشركات من السيرفر:', err);
+        return null;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      // إضافة رابط إدارة المستخدمين للقائمة الجانبية للـ admin فقط تلقائياً
+      if (SESSION && SESSION.role === 'admin') {
+        const sideMenuBody = document.querySelector('.offcanvas-body');
+        if (sideMenuBody) {
+          const adminLink = document.createElement('a');
+          adminLink.href = 'users-admin.html';
+          adminLink.className = 'btn btn-outline-custom-brown text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between';
+          adminLink.innerHTML = '<span>👥 إدارة المستخدمين</span><span>←</span>';
+          sideMenuBody.appendChild(adminLink);
+        }
+      }
+
       // جلب أحدث بيانات السيارات من شيت جوجل فور التحميل
       loadRegisteredCarsFromSheet();
+
+      // إعدادات الشركات للـ admin فقط
+      if (!IS_ADMIN) {
+        const companySettingsLink = document.getElementById('companySettingsLink');
+        if (companySettingsLink) companySettingsLink.remove();
+      }
 
       const addPassengerBtn = document.getElementById('addPassengerBtn');
       const tableBody = document.querySelector('#passengersTable tbody');
@@ -727,7 +786,7 @@
         "فوياج": { license: "22112", negotiatorName: "شهاب", negotiatorNationalId: "29903031234567", clients: ["عميل فوياج 1"] }
       };
 
-      const companiesStore = JSON.parse(localStorage.getItem('companiesSettingsStore')) || defaultCompaniesData;
+      let companiesStore = JSON.parse(localStorage.getItem('companiesSettingsStore')) || defaultCompaniesData;
 
       let activeTabId = null;
       let tabsList = [];
@@ -924,6 +983,7 @@
           const opt = document.createElement('option');
           opt.value = company;
           opt.textContent = company;
+          opt.dataset.companyId = companiesStore[company].company_id || '';
           companyNameSelect.appendChild(opt);
         });
       }
@@ -1137,6 +1197,7 @@
         delete fd.save_new_car;
         const comp = companiesStore[fd.company_name] || {};
         return Object.assign(fd, {
+          company_id: comp.company_id || '',
           company_license: comp.license || '',
           negotiator_name: comp.negotiatorName || '',
           negotiator_id: comp.negotiatorNationalId || ''
@@ -1286,7 +1347,7 @@
         showStatus('جاري تسجيل البيانات في الخلفية...', 'info');
 
         // 3) تجهيز بيانات الشيت
-        const sheetFields = ['company_name','client_name','trip_type','from_location','to_location','trip_date',
+        const sheetFields = ['company_name','company_id','client_name','trip_type','from_location','to_location','trip_date',
           'nationality','pax_count','car_type','car_name','car_plate','car_number','chassis_number',
           'guide_name','guide_phone','driver_name','driver_phone','backup_driver_name','backup_driver_phone',
           'program_details','departure_time'];
@@ -1354,7 +1415,12 @@
         addNewTabBtn.click();
       });
 
-      initTabs();
+      // جلب الشركات من السيرفر قبل بناء الصفحة؛ لو الجلب فشل نكمّل بآخر نسخة محفوظة
+      loadCompaniesFromServer().then(function (store) {
+        if (store === 'expired') return;
+        if (store) companiesStore = store;
+        initTabs();
+      });
     });
   </script>
 </body>
