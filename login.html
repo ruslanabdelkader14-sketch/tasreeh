@@ -100,6 +100,13 @@
       return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
+    // مفاتيح localStorage الخاصة بالتطبيق: بتتمسح عند تسجيل الدخول عشان بيانات يوزر ماتظهرش ليوزر تاني
+    const APP_STORAGE_KEYS = ['registeredCars', 'companiesSettingsStore', 'activeCompanyKey', 'tripTabsData',
+      'activeTripTabId', 'tripFormData', 'tripPermits', 'passengersList', 'lastSelectedCompany', 'lastSelectedClient'];
+    function clearAppStorage() {
+      APP_STORAGE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+    }
+
     const $ = id => document.getElementById(id);
     const setError = t => { $('err').textContent = t; };
     const call = body => fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }).then(r => r.json());
@@ -125,6 +132,7 @@
         $('password').value = '';
         const data = await call({ action: 'login', username, hash });
         if (data.ok) {
+          clearAppStorage();
           sessionStorage.setItem('session', JSON.stringify({ token: data.token, role: data.role, name: data.name }));
           location.replace(NEXT_PAGE);
           return;
@@ -143,7 +151,7 @@
         const s = JSON.parse(sessionStorage.getItem('session') || 'null');
         if (!s || SCRIPT_URL.startsWith('PASTE')) return;
         const r = await call({ action: 'verify', token: s.token });
-        if (r.ok) location.replace(NEXT_PAGE); else sessionStorage.removeItem('session');
+        if (r.ok) location.replace(NEXT_PAGE); else { clearAppStorage(); sessionStorage.removeItem('session'); }
       } catch (_) {}
     })();
   </script>
