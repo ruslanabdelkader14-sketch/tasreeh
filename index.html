@@ -689,11 +689,12 @@
     // جلب السيارات المسجلة تلقائياً من شيت جوجل وتحديث الـ localStorage
     async function loadRegisteredCarsFromSheet() {
       try {
-        const response = await fetch(GOOGLE_APP_SCRIPT_URL + '?token=' + encodeURIComponent(SESSION.token));
+        const response = await fetch(GOOGLE_APP_SCRIPT_URL + '?sheet=cars&token=' + encodeURIComponent(SESSION.token));
         const data = await response.json();
         if (data && data.error === 'expired') return authFail();
-        if (Array.isArray(data) && data.length > 0) {
-          const cars = data.map(item => ({
+        const carsRows = Array.isArray(data) ? data : (data && Array.isArray(data.trips) ? data.trips : []);
+        if (carsRows.length > 0) {
+          const cars = carsRows.map(item => ({
             company: String(item.company_name || ''),
             carType: String(item.car_type || ''),
             carName: String(item.car_name || ''),
