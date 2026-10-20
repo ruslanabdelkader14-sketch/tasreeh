@@ -449,8 +449,11 @@
 
   // ---------- التعامل مع الشيت ----------
   async function fetchCompanies() {
-    const res = await fetch(API_URL + '?sheet=companies&t=' + Date.now());
+    const token = getToken();
+    if (!token) { goLogin('no_token'); throw new Error('no_token'); }
+    const res = await fetch(API_URL + '?sheet=companies&token=' + encodeURIComponent(token) + '&t=' + Date.now());
     const list = await res.json();
+    if (list && list.error === 'expired') { goLogin('expired'); throw new Error('expired'); }
     if (!Array.isArray(list)) throw new Error(list.message || 'bad response');
     if (list.length && !('negotiator_national_id' in list[0])) throw new Error('old_script');
     const store = {};
@@ -682,7 +685,9 @@
     if (!companiesStore[activeCompanyKey]) activeCompanyKey = Object.keys(companiesStore)[0] || '';
     mirrorLocal();
   } catch (err) {
-    showError(explainError(err, 'مقدرتش أحمّل الشركات من الشيت، اعمل ريفريش للصفحة'), true);
+    if (err.message !== 'expired' && err.message !== 'no_token') {
+      showError(explainError(err, 'مقدرتش أحمّل الشركات من الشيت، اعمل ريفريش للصفحة'), true);
+    }
     btnSave.disabled = true;
     btnDeleteCompany.disabled = true;
   }
