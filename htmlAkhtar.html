@@ -462,7 +462,7 @@
   <div class="bottom-section">
     <div class="bottom-top-row">
       <div class="signature-right-sec">
-        <div>توقيع مدير الشركه : <span style="color: #0000d6;">أحمد علي</span></div>
+        <div>توقيع مدير الشركه : <span class="field_manager_name" style="color: #0000d6;"></span></div>
         <div>عنه: ............................................</div>
         <div class="stamp-box">خـتــم الـشــــركـه</div>
         <div class="date-written-box">تحريراً في : <span class="current_written_date"></span></div>
@@ -626,7 +626,7 @@
   <div class="bottom-section">
     <div class="bottom-top-row">
       <div class="signature-right-sec">
-        <div>توقيع مدير الشركه : <span style="color: #0000d6;">أحمد علي</span></div>
+        <div>توقيع مدير الشركه : <span class="field_manager_name" style="color: #0000d6;"></span></div>
         <div>عنه: ............................................</div>
         <div class="stamp-box">خـتــم الـشــــركـه</div>
         <div class="date-written-box">تحريراً في : <span class="current_written_date"></span></div>
@@ -808,7 +808,7 @@
   <div class="bottom-section">
     <div class="bottom-top-row">
       <div class="signature-right-sec">
-        <div>توقيع مدير الشركه : <span style="color: #0000d6;">أحمد علي</span></div>
+        <div>توقيع مدير الشركه : <span class="field_manager_name" style="color: #0000d6;"></span></div>
         <div>عنه: ............................................</div>
         <div class="stamp-box">خـتــم الـشــــركـه</div>
         <div class="date-written-box">تحريراً في : <span class="current_written_date"></span></div>
@@ -902,6 +902,7 @@
     setAllTxt('field_backup_driver_phone', data.backup_driver_phone);
     setAllTxt('field_notifier_name', data.negotiator_name);
     setAllTxt('field_notifier_id', data.negotiator_id);
+    setAllTxt('field_manager_name', data.manager_name);
 
     // ضبط نوع الرحلة بحسب مكان التواجد/التحرك (from_location)
     let tripTypeDisplay = data.trip_type || '';
