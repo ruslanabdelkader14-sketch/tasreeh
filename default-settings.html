@@ -271,9 +271,14 @@
           <input type="text" class="form-control" id="negotiatorName" placeholder="أدخل اسم المفاوض" required>
         </div>
 
-        <div class="mb-0">
+        <div class="mb-3">
           <label for="negotiatorNationalId" class="form-label">الرقم القومي (المفاوض)</label>
           <input type="text" class="form-control" id="negotiatorNationalId" placeholder="أدخل الرقم القومي للمفاوض" required>
+        </div>
+
+        <div class="mb-0">
+          <label for="managerName" class="form-label">مدير الشركة</label>
+          <input type="text" class="form-control" id="managerName" placeholder="أدخل اسم مدير الشركة (يظهر في توقيع الإخطار)">
         </div>
       </div>
 
@@ -344,6 +349,7 @@
   const companyLicenseInput = document.getElementById('companyLicense');
   const negotiatorNameInput = document.getElementById('negotiatorName');
   const negotiatorNationalIdInput = document.getElementById('negotiatorNationalId');
+  const managerNameInput = document.getElementById('managerName');
 
   const clientInput = document.getElementById('clientInput');
   const btnAddClient = document.getElementById('btnAddClient');
@@ -463,6 +469,7 @@
         license: c.license || '',
         negotiatorName: c.negotiator_name || '',
         negotiatorNationalId: c.negotiator_national_id || '',
+        managerName: c.manager_name || '',
         clients: Array.isArray(c.clients) ? c.clients : []
       };
     });
@@ -507,7 +514,7 @@
   }
 
   function loadActiveCompanyData() {
-    const data = companiesStore[activeCompanyKey] || { companyId: '', license: '', negotiatorName: '', negotiatorNationalId: '', clients: [] };
+    const data = companiesStore[activeCompanyKey] || { companyId: '', license: '', negotiatorName: '', negotiatorNationalId: '', managerName: '', clients: [] };
 
     activeCompanyTitle.textContent = activeCompanyKey ? `📝 إعدادات شركة: (${activeCompanyKey})` : '📝 إعدادات الشركة';
     companyIdDisplayInput.value = data.companyId || '';
@@ -515,6 +522,7 @@
     companyLicenseInput.value = data.license || '';
     negotiatorNameInput.value = data.negotiatorName || '';
     negotiatorNationalIdInput.value = data.negotiatorNationalId || '';
+    managerNameInput.value = data.managerName || '';
 
     renderClients();
   }
@@ -568,7 +576,7 @@
     const newCompName = newCompanyNameInput.value.trim();
     if (!newCompName) return;
     if (!companiesStore[newCompName]) {
-      companiesStore[newCompName] = { companyId: '', license: '', negotiatorName: '', negotiatorNationalId: '', clients: [] };
+      companiesStore[newCompName] = { companyId: '', license: '', negotiatorName: '', negotiatorNationalId: '', managerName: '', clients: [] };
       pendingNew.add(newCompName);
     }
     newCompanyNameInput.value = '';
@@ -592,7 +600,8 @@
       ...currentData,
       license: companyLicenseInput.value.trim(),
       negotiatorName: negotiatorNameInput.value.trim(),
-      negotiatorNationalId: negotiatorNationalIdInput.value.trim()
+      negotiatorNationalId: negotiatorNationalIdInput.value.trim(),
+      managerName: managerNameInput.value.trim()
     };
     const oldName = pendingNew.has(activeCompanyKey) ? '' : activeCompanyKey;
 
@@ -606,6 +615,7 @@
         license: entry.license,
         negotiator_name: entry.negotiatorName,
         negotiator_national_id: entry.negotiatorNationalId,
+        manager_name: entry.managerName,
         clients: (entry.clients || []).join(' | ')
       });
 
@@ -617,7 +627,7 @@
       const fresh = await fetchCompanies();
       const saved = fresh[newName];
       if (!saved || saved.license !== entry.license || saved.negotiatorName !== entry.negotiatorName ||
-          saved.negotiatorNationalId !== entry.negotiatorNationalId ||
+          saved.negotiatorNationalId !== entry.negotiatorNationalId || saved.managerName !== entry.managerName ||
           saved.clients.join('|') !== (entry.clients || []).join('|')) {
         throw new Error('verify');
       }
