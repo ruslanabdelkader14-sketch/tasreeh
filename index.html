@@ -732,6 +732,7 @@
             license: String(c.license || ''),
             negotiatorName: String(c.negotiator_name || ''),
             negotiatorNationalId: String(c.negotiator_national_id || ''),
+            managerName: String(c.manager_name || ''),
             clients: Array.isArray(c.clients) ? c.clients : []
           };
         });
@@ -1206,7 +1207,8 @@
           company_id: comp.company_id || '',
           company_license: comp.license || '',
           negotiator_name: comp.negotiatorName || '',
-          negotiator_id: comp.negotiatorNationalId || ''
+          negotiator_id: comp.negotiatorNationalId || '',
+          manager_name: comp.managerName || ''
         });
       }
 
