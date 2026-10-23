@@ -1231,17 +1231,42 @@
         localStorage.setItem('tripPermits', JSON.stringify(permits));
       }
 
-      function saveCarIfNew(d) {
-        if (!document.getElementById('saveNewCar').checked) return;
-        const cars = JSON.parse(localStorage.getItem('registeredCars')) || defaultCarsData;
-        if (cars.some(c => c.carNumber === d.car_number && c.carPlate === d.car_plate)) return;
-        cars.push({
-          company: d.company_name, carType: d.car_type, carName: d.car_name,
-          carPlate: d.car_plate, carNumber: d.car_number, chassisNumber: d.chassis_number,
-          driverName: d.driver_name, driverPhone: d.driver_phone,
-          backupDriverName: d.backup_driver_name, backupDriverPhone: d.backup_driver_phone
-        });
-        localStorage.setItem('registeredCars', JSON.stringify(cars));
+      // يحفظ العربية في شيت Registered_Cars باسم الشركة (لو التشيك بوكس مفعّل)
+      // السيرفر بيمنع تكرار (رقم العربية + الشاسيه) داخل نفس الشركة فقط
+      // يرجّع: 'skipped' | 'missing' | 'saved' | 'duplicate' | 'expired' | 'error'
+      async function saveCarIfNew(d) {
+        if (!document.getElementById('saveNewCar').checked) return 'skipped';
+        if (!String(d.car_number || '').trim() || !String(d.chassis_number || '').trim()) return 'missing';
+
+        const params = new URLSearchParams();
+        params.append('action', 'addCar');
+        params.append('token', SESSION.token);
+        ['company_id','company_name','car_type','car_name','car_plate','car_number','chassis_number',
+         'driver_name','driver_phone','backup_driver_name','backup_driver_phone'
+        ].forEach(k => params.append(k, d[k] || ''));
+
+        try {
+          const res = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: params });
+          const r = await res.json();
+          if (r && r.error === 'expired') return 'expired';
+          if (r && r.status === 'duplicate') return 'duplicate';
+          if (r && r.status === 'success') {
+            // نحدّث الكاش المحلي عشان العربية تظهر في البحث فوراً
+            const cars = JSON.parse(localStorage.getItem('registeredCars')) || [];
+            cars.push({
+              company: d.company_name, carType: d.car_type, carName: d.car_name,
+              carPlate: d.car_plate, carNumber: d.car_number, chassisNumber: d.chassis_number,
+              driverName: d.driver_name, driverPhone: d.driver_phone,
+              backupDriverName: d.backup_driver_name, backupDriverPhone: d.backup_driver_phone
+            });
+            localStorage.setItem('registeredCars', JSON.stringify(cars));
+            return 'saved';
+          }
+          return 'error';
+        } catch (err) {
+          console.error(err);
+          return 'error';
+        }
       }
 
       function showStatus(msg, type) {
@@ -1338,7 +1363,6 @@
         // 1) حفظ محلي سريع وحفظ الحالة
         persistPrintData();
         savePermitLocally(d, tab);
-        saveCarIfNew(d);
 
         // 2) إظهار الزراير فوراً بدون انتظار الشبكة
         step1Actions.classList.add('d-none');
@@ -1368,7 +1392,9 @@
           .then(res => res.json())
           .catch(err => ({ status: 'error', message: err }));
 
-        const [formRes, sheetRes] = await Promise.all([formPromise, sheetPromise]);
+        const carPromise = saveCarIfNew(d);
+
+        const [formRes, sheetRes, carRes] = await Promise.all([formPromise, sheetPromise, carPromise]);
 
         const msgs = [];
         let level = 'success';
@@ -1391,6 +1417,19 @@
         } else {
           level = 'warning';
           msgs.push('⚠ تعذر الإرسال للشيت');
+        }
+
+        if (carRes === 'expired') { authFail(); return; }
+        if (carRes === 'saved') {
+          msgs.push('✔ تم حفظ السيارة في قاعدة البيانات');
+        } else if (carRes === 'duplicate') {
+          msgs.push('ℹ السيارة مسجلة قبل كده على نفس الشركة ولم تُضف مرة تانية');
+        } else if (carRes === 'missing') {
+          level = 'warning';
+          msgs.push('⚠ تعذر حفظ العربية: رقم العربية أو رقم الشاسيه فاضي');
+        } else if (carRes === 'error') {
+          level = 'warning';
+          msgs.push('⚠ تعذر حفظ العربية في قاعدة البيانات');
         }
 
         showStatus(msgs.join(' | '), level);
