@@ -1136,7 +1136,12 @@
 
           const registeredCars = JSON.parse(localStorage.getItem('registeredCars')) || defaultCarsData;
 
+          // كل شركة ليها عربياتها بس: نعرض عربيات الشركة المختارة حالياً فقط
+          const selectedCompanyName = String(companyNameSelect.value || '').trim();
+
           const matchedCars = registeredCars.filter(car => {
+            if (String(car.company || '').trim() !== selectedCompanyName) return false;
+
             const carNum = String(car.carNumber || '').toLowerCase();
             const carName = String(car.carName || '').toLowerCase();
             const driverName = String(car.driverName || '').toLowerCase();
