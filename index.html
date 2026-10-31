@@ -17,6 +17,7 @@
   <meta name="apple-mobile-web-app-title" content="African Express">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="trip-defaults-core.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
@@ -629,6 +630,7 @@
         <div class="mb-3">
           <label class="form-label">موعد الذهاب</label>
           <input type="text" class="form-control" name="departure_time" id="departure_time" placeholder="مثال: الساعة 08:00 صباحاً">
+          <div class="form-text" id="defaultsHint"></div>
         </div>
 
         <div id="gfStatus" class="alert d-none" role="alert"></div>
@@ -662,7 +664,7 @@
 
     // مفاتيح localStorage الخاصة بالتطبيق (نفس القائمة في login.html)
     const APP_STORAGE_KEYS = ['registeredCars', 'companiesSettingsStore', 'activeCompanyKey', 'tripTabsData',
-      'activeTripTabId', 'tripFormData', 'tripPermits', 'passengersList', 'lastSelectedCompany', 'lastSelectedClient'];
+      'activeTripTabId', 'tripFormData', 'tripPermits', 'passengersList', 'lastSelectedCompany', 'lastSelectedClient', 'tripDefaultsStore'];
     function clearAppStorage() {
       APP_STORAGE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     }
@@ -732,7 +734,6 @@
             license: String(c.license || ''),
             negotiatorName: String(c.negotiator_name || ''),
             negotiatorNationalId: String(c.negotiator_national_id || ''),
-            managerName: String(c.manager_name || ''),
             clients: Array.isArray(c.clients) ? c.clients : []
           };
         });
@@ -756,6 +757,12 @@
           adminLink.className = 'btn btn-outline-custom-brown text-start fs-6 p-3 shadow-sm d-flex align-items-center justify-content-between';
           adminLink.innerHTML = '<span>👥 إدارة المستخدمين</span><span>←</span>';
           sideMenuBody.appendChild(adminLink);
+
+          const defaultsLink = document.createElement('a');
+          defaultsLink.href = 'trip-defaults.html';
+          defaultsLink.className = adminLink.className;
+          defaultsLink.innerHTML = '<span>🧭 البرنامج والمواعيد الافتراضية</span><span>←</span>';
+          sideMenuBody.appendChild(defaultsLink);
         }
       }
 
@@ -793,7 +800,49 @@
       let activeTabId = null;
       let tabsList = [];
 
+      // ---------- القيم الافتراضية للرحلات (من صفحة الأدمن) ----------
+      let tripDefaults = TripDefaults.load();
+
+      function fillSelect(sel, list) {
+        const keep = sel.value;
+        sel.innerHTML = '';
+        list.forEach(v => {
+          const o = document.createElement('option');
+          o.value = v; o.textContent = v;
+          sel.appendChild(o);
+        });
+        if (keep && list.includes(keep)) sel.value = keep;
+      }
+
+      function populateTripOptions() {
+        fillSelect(document.getElementById('trip_type'), tripDefaults.options.trip_type);
+        fillSelect(document.getElementById('from_location'), tripDefaults.options.from_location);
+        fillSelect(document.getElementById('to_location'), tripDefaults.options.to_location);
+      }
+
+      function updateDefaultsHint() {
+        const hint = document.getElementById('defaultsHint');
+        const depInput = document.getElementById('departure_time');
+        if (!hint || !depInput) return;
+        const R = TripDefaults.resolve({
+          trip_type: document.getElementById('trip_type').value,
+          from_location: document.getElementById('from_location').value,
+          to_location: document.getElementById('to_location').value
+        }, tripDefaults);
+        depInput.placeholder = R.dep ? ('الافتراضي: ' + R.dep) : 'مثال: الساعة 08:00 صباحاً';
+        const parts = [];
+        parts.push('الافتراضي لو سبته فاضي: ذهاب ' + (R.dep || 'نقط فاضية') + ' / عودة ' + (R.ret || 'نقط فاضية'));
+        if (R.suffix) parts.push('يُكتب جنب نوع الرحلة: ' + R.suffix);
+        if (R.program) parts.push('البرنامج الافتراضي: ' + R.program);
+        hint.textContent = parts.join(' — ');
+      }
+
+      ['trip_type', 'from_location', 'to_location'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateDefaultsHint);
+      });
+
       function initTabs() {
+        populateTripOptions();
         const savedTabs = localStorage.getItem('tripTabsData');
         const savedActiveId = localStorage.getItem('activeTripTabId');
 
@@ -944,6 +993,13 @@
         Object.keys(data).forEach(key => {
           const field = tripForm.querySelector(`[name="${key}"]`);
           if (field) {
+            // لو القيمة المحفوظة اتشالت من القوائم، نضيفها مؤقتاً عشان ماتضيعش
+            if (field.tagName === 'SELECT' && data[key] && !Array.from(field.options).some(o => o.value === data[key])
+                && ['trip_type', 'from_location', 'to_location'].includes(key)) {
+              const o = document.createElement('option');
+              o.value = data[key]; o.textContent = data[key];
+              field.appendChild(o);
+            }
             field.value = data[key];
           }
         });
@@ -969,6 +1025,8 @@
         });
 
         updateRemoveButtons();
+
+        updateDefaultsHint();
 
         if (currentTab.step === 2) {
           step1Actions.classList.add('d-none');
@@ -1207,8 +1265,7 @@
           company_id: comp.company_id || '',
           company_license: comp.license || '',
           negotiator_name: comp.negotiatorName || '',
-          negotiator_id: comp.negotiatorNationalId || '',
-          manager_name: comp.managerName || ''
+          negotiator_id: comp.negotiatorNationalId || ''
         });
       }
 
@@ -1463,9 +1520,14 @@
       });
 
       // جلب الشركات من السيرفر قبل بناء الصفحة؛ لو الجلب فشل نكمّل بآخر نسخة محفوظة
-      loadCompaniesFromServer().then(function (store) {
-        if (store === 'expired') return;
+      Promise.all([
+        loadCompaniesFromServer(),
+        TripDefaults.fetchRemote(GOOGLE_APP_SCRIPT_URL, SESSION.token)
+      ]).then(function (res) {
+        const store = res[0], defs = res[1];
+        if (store === 'expired' || defs === 'expired') { authFail(); return; }
         if (store) companiesStore = store;
+        if (defs) tripDefaults = defs;
         initTabs();
       });
     });
