@@ -872,6 +872,7 @@
 </div>
 
 <!-- ==================== SCRIPT FOR AUTO-FILLING ALL 3 PAGES ==================== -->
+<script src="trip-defaults-core.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const dataRaw = localStorage.getItem('tripFormData');
@@ -904,93 +905,35 @@
     setAllTxt('field_notifier_id', data.negotiator_id);
     setAllTxt('field_manager_name', data.manager_name);
 
-    // ضبط نوع الرحلة بحسب مكان التواجد/التحرك (from_location)
-    let tripTypeDisplay = data.trip_type || '';
-    const fromLoc = (data.from_location || '').trim();
+    // ===== البيانات الافتراضية (من صفحة "البرنامج والمواعيد الافتراضية") =====
+    const DOTS = TripDefaults.DOTS;
+    const toLoc = (data.to_location || '').trim();
+    const D = TripDefaults.resolve({
+      trip_type: data.trip_type,
+      from_location: data.from_location,
+      to_location: data.to_location
+    });
 
-    if (fromLoc === 'مرسى علم' || fromLoc === 'مرسي علم') {
-      tripTypeDisplay += ' مرسى علم';
-    } else if (fromLoc === 'أسوان' || fromLoc === 'اسوان') {
-      tripTypeDisplay += ' من أسوان';
-    } else if (fromLoc === 'الأقصر' || fromLoc === 'الاقصر') {
-      tripTypeDisplay += ' من الأقصر';
-    }
+    // نوع الرحلة + اللي بيتكتب جنبه
+    setAllTxt('field_trip_type', (data.trip_type || '') + (D.suffix ? ' ' + D.suffix : ''));
 
-    setAllTxt('field_trip_type', tripTypeDisplay);
-
-    let baseProgram = "";
-
-    if (data.to_location === 'القاهرة' || data.to_location === 'القاهره') {
-      if (data.trip_type === 'توصيلة') {
-        baseProgram = "رست الزعفرانة +";
-      } else {
-        baseProgram = "رست الزعفرانة + هرم + متحف جديد + قلعه + جوله نيل + محلات + غداء + مصر القديمه + خان الخليلي";
-      }
-    } else if (data.to_location === 'الأقصر' || data.to_location === 'الاقصر') {
-      if (data.trip_type === 'توصيلة') {
-        baseProgram = "رست 85 +";
-      } else {
-        baseProgram = "رست 85 – دندره -+كرنك+حتشبسوت+ملوك+ملكات+محلات+جزيره+جولة نيل+مرسي اهالي+غداء +";
-      }
-    }
-
-    const fullProgram = data.program_details ? baseProgram + " " + data.program_details : baseProgram;
+    // البرنامج الافتراضي + إضافات المستخدم
+    const fullProgram = [D.program, data.program_details].filter(Boolean).join(' ');
     setAllTxt('field_program_details', fullProgram);
 
+    // خانات الاتجاه ومنفذ الخروج
     const setAllCheck = (className, status) => {
       document.querySelectorAll('.' + className).forEach(chk => chk.checked = status);
     };
+    ['cairo', 'alex', 'sharm', 'luxor', 'aswan', 'gouna', 'safaga', 'marsa'].forEach(k => setAllCheck('chk_' + k, false));
+    D.directions.forEach(k => setAllCheck('chk_' + k, true));
+    D.exits.forEach(k => setAllCheck('chk_' + k, true));
 
-    // تفريغ كافة خانات التحديد أولاً للتأكد من عدم وجود تحديدات سابقة
-    ['chk_cairo', 'chk_alex', 'chk_sharm', 'chk_luxor', 'chk_aswan', 'chk_gouna', 'chk_safaga', 'chk_marsa'].forEach(cls => {
-      setAllCheck(cls, false);
-    });
-
-    const toLoc = (data.to_location || '').trim();
-
-    // الشروط المخصصة عند بدء الرحلة من "مرسى علم"
-    if (fromLoc === 'مرسى علم' || fromLoc === 'مرسي علم') {
-      if (toLoc === 'الأقصر' || toLoc === 'الاقصر') {
-        setAllCheck('chk_luxor', true);    // تعليم "الأقصر" في الإتجاه
-        setAllCheck('chk_safaga', true);   // تعليم "كمين سفاجا – قنا" في منفذ الخروج
-      } else if (toLoc === 'القاهرة' || toLoc === 'القاهره') {
-        setAllCheck('chk_cairo', true);    // تعليم "القاهرة" في الإتجاه
-        setAllCheck('chk_gouna', true);    // تعليم "كمين الجونه" في منفذ الخروج
-      } else if (toLoc === 'أسوان' || toLoc === 'اسوان') {
-        setAllCheck('chk_aswan', true);
-        setAllCheck('chk_marsa', true);
-      } else {
-        setAllCheck('chk_marsa', true);
-      }
-    } else {
-      // شروط الحالات العادية الأخرى (مثل الغردقة وغيرها)
-      if (toLoc === 'القاهرة' || toLoc === 'القاهره') {
-        setAllCheck('chk_cairo', true);
-        setAllCheck('chk_gouna', true);
-      } else if (toLoc === 'الإسكندرية' || toLoc === 'الاسكندرية') {
-        setAllCheck('chk_alex', true);
-        setAllCheck('chk_gouna', true);
-      } else if (toLoc === 'شرم الشيخ') {
-        setAllCheck('chk_sharm', true);
-        setAllCheck('chk_gouna', true);
-      } else if (toLoc === 'الأقصر' || toLoc === 'الاقصر') {
-        setAllCheck('chk_luxor', true);
-        setAllCheck('chk_safaga', true);
-      } else if (toLoc === 'أسوان' || toLoc === 'اسوان') {
-        setAllCheck('chk_aswan', true);
-        setAllCheck('chk_safaga', true);
-      }
-    }
-
-    // جلب موعد الذهاب أو تعيين "6 ص" كقيمة افتراضية إذا كانت فارغة
+    // المواعيد: اللي كتبه المستخدم يكسب، وإلا الافتراضي، وإلا نقط فاضية
     const depTimeInput = (data.departure_time || '').trim();
-    const depTimeVal = depTimeInput ? depTimeInput : '6 ص';
-    
-    // التحقق مما إذا كانت نوع الرحلة "توصيلة"
-    const isTransfer = (data.trip_type || '').trim() === 'توصيلة';
-    const retTimeVal = isTransfer ? '....... : .......' : '18'; // أو '17 م' حسب ما ترغب في باقي الرحلات
+    const depTimeVal = depTimeInput || D.dep || DOTS;
+    const retTimeVal = D.ret || DOTS;
 
-    // دالة لتعبئة المواعيد في الجداول حسب الاتجاه
     const setTimeText = (rightDep, rightRet, leftDep, leftRet) => {
       document.querySelectorAll('.page').forEach(page => {
         const rightCell = page.querySelectorAll('table.trip-table tr')[3].cells[1];
@@ -1004,16 +947,20 @@
       });
     };
 
-    // ضبط المواعيد بناءً على الوجهة
-    if (toLoc === 'القاهرة' || toLoc === 'القاهره' || toLoc === 'الإسكندرية' || toLoc === 'الاسكندرية' || toLoc === 'شرم الشيخ') {
-      // تعبئة العمود الأيمن (طريق القاهرة) وتفريغ الأيسر
-      setTimeText(depTimeVal, retTimeVal, '....... : .......', '....... : .......');
-    } else if (toLoc === 'الأقصر' || toLoc === 'الاقصر' || toLoc === 'أسوان' || toLoc === 'اسوان') {
-      // تعبئة العمود الأيسر (طريق سفاجا/الأقصر) وتفريغ الأيمن
-      setTimeText('....... : .......', '....... : .......', depTimeVal, retTimeVal);
+    // أي عمود نكتب فيه المواعيد؟ (يمين = طريق القاهرة/الجونة، يسار = طريق سفاجا/مرسى علم)
+    const nTo = TripDefaults.norm(toLoc);
+    let side = '';
+    if (D.exits.includes('gouna')) side = 'right';
+    else if (D.exits.includes('safaga') || D.exits.includes('marsa')) side = 'left';
+    else if (['القاهره', 'الاسكندريه', 'شرم الشيخ'].includes(nTo)) side = 'right';
+    else if (['الاقصر', 'اسوان'].includes(nTo)) side = 'left';
+
+    if (side === 'right') {
+      setTimeText(depTimeVal, retTimeVal, DOTS, DOTS);
+    } else if (side === 'left') {
+      setTimeText(DOTS, DOTS, depTimeVal, retTimeVal);
     } else {
-      // في حالة عدم التحديد تترك جميع الخانات فارغة
-      setTimeText('....... : .......', '....... : .......', '....... : .......', '....... : .......');
+      setTimeText(DOTS, DOTS, DOTS, DOTS);
     }
 
     const today = new Date();
