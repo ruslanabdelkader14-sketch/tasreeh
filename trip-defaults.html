@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>البرنامج والمواعيد الافتراضية - African Express Travel</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0d12">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="trip-defaults-core.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    :root {
+      --bg-warm:#F7F4EF; --card-bg:#FFFFFF; --text-main:#2C2523; --text-muted:#6C635F;
+      --border-subtle:#E8E2D9; --primary-accent:#D96B43; --primary-accent-hover:#C25832;
+      --secondary-accent:#5A4238; --header-bg:#FAF6F0;
+    }
+    body { background:var(--bg-warm)!important; color:var(--text-main); font-family:'Cairo','Segoe UI',Tahoma,sans-serif; line-height:1.6; padding-bottom:90px; }
+    .page-card { background:var(--card-bg); border:1px solid var(--border-subtle); border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.04); }
+    .page-title { color:var(--secondary-accent); font-weight:700; font-size:1.4rem; }
+    .section-title { color:var(--secondary-accent); font-weight:700; font-size:1.05rem; margin:0; }
+    .form-control,.form-select { border:1.5px solid var(--border-subtle); border-radius:8px; background:#FAFAFA; font-size:.9rem; }
+    .form-control:focus,.form-select:focus { background:#fff; border-color:var(--primary-accent); box-shadow:0 0 0 .25rem rgba(217,107,67,.15); }
+    .btn-main { background:var(--primary-accent); border-color:var(--primary-accent); color:#fff; font-weight:700; border-radius:10px; }
+    .btn-main:hover { background:var(--primary-accent-hover); border-color:var(--primary-accent-hover); color:#fff; }
+    .btn-brown { color:var(--secondary-accent); border:1.5px solid var(--secondary-accent); border-radius:8px; background:transparent; }
+    .btn-brown:hover { background:var(--secondary-accent); color:#fff; }
+    .hint { color:var(--text-muted); font-size:.82rem; }
+    .chip { display:inline-flex; align-items:center; gap:6px; background:#F2EBE1; color:var(--secondary-accent); border-radius:20px; padding:3px 6px 3px 12px; font-size:.88rem; margin:2px; }
+    .chip button { border:none; background:transparent; color:#999; font-size:1.05rem; line-height:1; padding:0 4px; border-radius:50%; }
+    .chip button:hover { color:#dc3545; }
+    .rules-table thead { background:#F2EBE1; color:var(--secondary-accent); font-size:.85rem; }
+    .rules-table th { font-weight:700; padding:10px 8px; white-space:nowrap; }
+    .rules-table td { padding:8px; vertical-align:top; }
+    .chk { display:inline-flex; align-items:center; gap:4px; font-size:.82rem; margin-left:8px; white-space:nowrap; }
+    .chk-group { display:flex; flex-wrap:wrap; gap:2px 0; min-width:150px; }
+    .preview-box { background:var(--header-bg); border:1.5px dashed var(--border-subtle); border-radius:12px; padding:12px 14px; font-size:.92rem; }
+    .preview-box dt { color:var(--secondary-accent); font-weight:700; font-size:.82rem; }
+    .preview-box dd { margin:0 0 6px 0; }
+    .savebar { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border-subtle); padding:10px 16px; z-index:1040; display:flex; gap:10px; align-items:center; justify-content:space-between; box-shadow:0 -4px 16px rgba(0,0,0,.05); }
+    .dirty-dot { display:none; width:9px; height:9px; border-radius:50%; background:var(--primary-accent); }
+    .dirty .dirty-dot { display:inline-block; }
+
+    @media (max-width: 991.98px) {
+      .rules-table, .rules-table tbody, .rules-table tr, .rules-table td { display:block; width:100%!important; }
+      .rules-table thead { display:none; }
+      .rules-table tr { margin-bottom:14px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px; background:#FAFAFA; }
+      .rules-table td { padding:4px 0; border:none!important; }
+      .rules-table td::before { content:attr(data-label); display:block; font-size:.78rem; font-weight:700; color:var(--secondary-accent); margin-bottom:2px; }
+      .rules-table td.act::before { display:none; }
+    }
+  </style>
+</head>
+<body class="p-2 p-md-4">
+
+<div class="container" style="max-width:1280px;">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <a href="index.html" class="btn btn-brown">→ رجوع للفورم</a>
+    <h3 class="page-title mb-0">⚙ البرنامج والمواعيد الافتراضية</h3>
+    <span></span>
+  </div>
+
+  <div id="status" class="alert d-none" role="alert"></div>
+
+  <!-- كيف تشتغل الصفحة -->
+  <div class="page-card p-3 mb-3">
+    <div class="hint">
+      كل صف = قاعدة: <b>لو الرحلة طابقت (النوع + من + إلى)</b> يتطبّق عليها البرنامج والمواعيد والخانات اللي في الصف.
+      اختيار «الكل» معناه «أي قيمة». لو أكتر من قاعدة اتطابقت: <b>الأخص يكسب</b> (إلى ثم من ثم النوع)،
+      وأي خانة سيبتها فاضية بتاخدها من القاعدة الأعم.
+      اكتب <b>-</b> في موعد الذهاب/العودة/الإضافة لو عايزه يتطبع نقط فاضية.
+      موعد الذهاب اللي المستخدم بيكتبه في الفورم دايماً بيكسب على الافتراضي.
+    </div>
+  </div>
+
+  <!-- القوائم -->
+  <div class="page-card p-3 mb-3">
+    <h5 class="section-title mb-2">القوائم اللي بتظهر في الفورم</h5>
+    <div class="row g-3" id="listsRow"></div>
+  </div>
+
+  <!-- جدول القواعد -->
+  <div class="page-card p-3 mb-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <h5 class="section-title">القواعد</h5>
+      <button type="button" class="btn btn-main btn-sm px-3" id="addRuleBtn">+ إضافة قاعدة</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered rules-table mb-0">
+        <thead>
+          <tr>
+            <th style="min-width:120px;">نوع الرحلة</th>
+            <th style="min-width:110px;">من</th>
+            <th style="min-width:110px;">إلى</th>
+            <th style="min-width:130px;">يتكتب جنب نوع الرحلة</th>
+            <th style="min-width:260px;">البرنامج</th>
+            <th style="min-width:100px;">موعد الذهاب</th>
+            <th style="min-width:100px;">موعد العودة</th>
+            <th style="min-width:170px;">الاتجاه</th>
+            <th style="min-width:170px;">منفذ الخروج</th>
+            <th style="width:90px;">إجراء</th>
+          </tr>
+        </thead>
+        <tbody id="rulesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- معاينة -->
+  <div class="page-card p-3 mb-3">
+    <h5 class="section-title mb-2">🔍 معاينة: هتطلع إزاي؟</h5>
+    <div class="row g-2 mb-2">
+      <div class="col-6 col-md-3"><label class="form-label hint mb-1">نوع الرحلة</label><select class="form-select" id="pvType"></select></div>
+      <div class="col-6 col-md-3"><label class="form-label hint mb-1">من</label><select class="form-select" id="pvFrom"></select></div>
+      <div class="col-6 col-md-3"><label class="form-label hint mb-1">إلى</label><select class="form-select" id="pvTo"></select></div>
+      <div class="col-6 col-md-3"><label class="form-label hint mb-1">موعد الذهاب اللي اتكتب في الفورم (اختياري)</label><input type="text" class="form-control" id="pvDep" placeholder="سيبه فاضي = الافتراضي"></div>
+    </div>
+    <div class="preview-box"><dl class="mb-0" id="pvOut"></dl></div>
+  </div>
+</div>
+
+<div class="savebar" id="savebar">
+  <div class="d-flex align-items-center gap-2"><span class="dirty-dot"></span><span class="hint" id="saveHint">لا توجد تعديلات غير محفوظة</span></div>
+  <button type="button" class="btn btn-main px-4" id="saveBtn">💾 حفظ الكل</button>
+</div>
+
+<script>
+  const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNsd0GPwpfhFiNxsnLFm-N__ALxPGAc79ogpqoNfy4pXZs3Dywb_fh_qQbskxgfA/exec';
+
+  // 🔒 للأدمن فقط
+  const SESSION = JSON.parse(sessionStorage.getItem('session') || 'null');
+  if (!SESSION) location.replace('login.html');
+  else if (String(SESSION.role || '').trim().toLowerCase() !== 'admin') location.replace('index.html');
+
+  const TD = window.TripDefaults;
+  const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const OPT_KINDS = [
+    { k: 'trip_type', l: 'أنواع الرحلات', ph: 'نوع جديد (مثال: رحلة يومية)' },
+    { k: 'from_location', l: 'أماكن "من"', ph: 'مكان جديد' },
+    { k: 'to_location', l: 'أماكن "إلى"', ph: 'مكان جديد' }
+  ];
+
+  let state = { options: {}, rules: [] };
+  let dirty = false;
+
+  const $ = id => document.getElementById(id);
+  function showStatus(msg, type) {
+    const b = $('status'); b.className = 'alert alert-' + type; b.textContent = msg;
+    if (type === 'success') setTimeout(() => b.classList.add('d-none'), 4000);
+  }
+  function markDirty(v = true) {
+    dirty = v;
+    $('savebar').classList.toggle('dirty', v);
+    $('saveHint').textContent = v ? 'فيه تعديلات لسه متحفظتش' : 'لا توجد تعديلات غير محفوظة';
+  }
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  const newId = () => 'R' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const uniq = a => Array.from(new Set(a));
+
+  // ---------------- القوائم ----------------
+  function renderLists() {
+    $('listsRow').innerHTML = OPT_KINDS.map(o => `
+      <div class="col-12 col-lg-4">
+        <label class="form-label fw-bold" style="color:var(--secondary-accent)">${o.l}</label>
+        <div class="mb-2" data-chips="${o.k}">${(state.options[o.k] || []).map((v, i) =>
+          `<span class="chip">${esc(v)}<button type="button" data-del-opt="${o.k}" data-i="${i}" title="حذف">&times;</button></span>`).join('')}</div>
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control" data-new-opt="${o.k}" placeholder="${o.ph}">
+          <button type="button" class="btn btn-brown" data-add-opt="${o.k}">+ إضافة</button>
+        </div>
+      </div>`).join('');
+  }
+
+  $('listsRow').addEventListener('click', e => {
+    const add = e.target.closest('[data-add-opt]');
+    if (add) return addOption(add.dataset.addOpt);
+    const del = e.target.closest('[data-del-opt]');
+    if (del) {
+      const k = del.dataset.delOpt, v = state.options[k][+del.dataset.i];
+      const used = state.rules.some(r => r[k] === v);
+      if (used && !confirm('«' + v + '» مستخدمة في قواعد. لو حذفتها من القائمة مش هتظهر في الفورم، والقواعد هتفضل موجودة. تكمل؟')) return;
+      if (state.options[k].length <= 1) return alert('لازم يفضل عنصر واحد على الأقل في القائمة.');
+      state.options[k].splice(+del.dataset.i, 1);
+      afterOptionsChange();
+    }
+  });
+  $('listsRow').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.dataset.newOpt) { e.preventDefault(); addOption(e.target.dataset.newOpt); }
+  });
+  function addOption(k) {
+    const inp = document.querySelector(`[data-new-opt="${k}"]`);
+    const v = inp.value.trim();
+    if (!v || v === '*' ) return;
+    if (state.options[k].some(x => TD.norm(x) === TD.norm(v))) return alert('موجود بالفعل في القائمة.');
+    state.options[k].push(v);
+    afterOptionsChange();
+  }
+  function afterOptionsChange() { renderLists(); renderRules(); fillPreviewSelects(); updatePreview(); markDirty(); }
+
+  // ---------------- القواعد ----------------
+  function selectHtml(k, val) {
+    const opts = uniq([...(state.options[k] || []), val]).filter(Boolean);
+    return `<select class="form-select form-select-sm" data-f="${k}"><option value="">الكل</option>` +
+      opts.map(o => `<option value="${esc(o)}"${o === val ? ' selected' : ''}>${esc(o)}</option>`).join('') + `</select>`;
+  }
+  const chkGroup = (f, list, sel) => `<div class="chk-group">` + list.map(d =>
+    `<label class="chk"><input type="checkbox" data-f="${f}" data-k="${d.k}"${sel.includes(d.k) ? ' checked' : ''}> ${d.l}</label>`).join('') + `</div>`;
+
+  function renderRules() {
+    $('rulesBody').innerHTML = state.rules.map((r, i) => `
+      <tr data-i="${i}">
+        <td data-label="نوع الرحلة">${selectHtml('trip_type', r.trip_type)}</td>
+        <td data-label="من">${selectHtml('from_location', r.from_location)}</td>
+        <td data-label="إلى">${selectHtml('to_location', r.to_location)}</td>
+        <td data-label="يتكتب جنب نوع الرحلة"><input type="text" class="form-control form-control-sm" data-f="type_suffix" value="${esc(r.type_suffix)}" placeholder="مثال: من الأقصر"></td>
+        <td data-label="البرنامج"><textarea class="form-control form-control-sm" rows="3" data-f="program" placeholder="سيبه فاضي = يورّث">${esc(r.program)}</textarea></td>
+        <td data-label="موعد الذهاب"><input type="text" class="form-control form-control-sm" data-f="departure_time" value="${esc(r.departure_time)}" placeholder="6 ص"></td>
+        <td data-label="موعد العودة"><input type="text" class="form-control form-control-sm" data-f="return_time" value="${esc(r.return_time)}" placeholder="18 أو -"></td>
+        <td data-label="الاتجاه">${chkGroup('directions', TD.DIRS, r.directions)}</td>
+        <td data-label="منفذ الخروج">${chkGroup('exits', TD.EXITS, r.exits)}</td>
+        <td class="act">
+          <div class="d-flex gap-1">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-act="dup" title="نسخ">⧉</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-act="del" title="حذف">&times;</button>
+          </div>
+        </td>
+      </tr>`).join('') ||
+      `<tr><td colspan="10" class="text-center hint py-4">مفيش قواعد. اضغط «+ إضافة قاعدة».</td></tr>`;
+  }
+
+  function onRuleEdit(e) {
+    const el = e.target, f = el.dataset.f;
+    if (!f) return;
+    const tr = el.closest('tr'); if (!tr) return;
+    const r = state.rules[+tr.dataset.i]; if (!r) return;
+    if (f === 'directions' || f === 'exits') {
+      const s = new Set(r[f]); el.checked ? s.add(el.dataset.k) : s.delete(el.dataset.k); r[f] = [...s];
+    } else r[f] = el.value;
+    markDirty(); updatePreview();
+  }
+  $('rulesBody').addEventListener('input', onRuleEdit);
+  $('rulesBody').addEventListener('change', onRuleEdit);
+  $('rulesBody').addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const i = +b.closest('tr').dataset.i;
+    if (b.dataset.act === 'del') {
+      if (!confirm('حذف هذه القاعدة؟')) return;
+      state.rules.splice(i, 1);
+    } else {
+      const c = TD.clone(state.rules[i]); c.rule_id = newId(); state.rules.splice(i + 1, 0, c);
+    }
+    renderRules(); markDirty(); updatePreview();
+  });
+  $('addRuleBtn').addEventListener('click', () => {
+    state.rules.push(TD.cleanRule({ rule_id: newId() }));
+    renderRules(); markDirty();
+    const last = $('rulesBody').lastElementChild; if (last) last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  // ---------------- المعاينة ----------------
+  function fillPreviewSelects() {
+    const keep = { t: $('pvType').value, f: $('pvFrom').value, to: $('pvTo').value };
+    const fill = (id, list, v) => {
+      $(id).innerHTML = list.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+      if (list.includes(v)) $(id).value = v;
+    };
+    fill('pvType', state.options.trip_type, keep.t);
+    fill('pvFrom', state.options.from_location, keep.f);
+    fill('pvTo', state.options.to_location, keep.to);
+  }
+  function updatePreview() {
+    const trip = { trip_type: $('pvType').value, from_location: $('pvFrom').value, to_location: $('pvTo').value };
+    const R = TD.resolve(trip, state);
+    const typed = $('pvDep').value.trim();
+    const dep = typed || R.dep || TD.DOTS;
+    const names = (list, keys) => keys.map(k => (list.find(x => x.k === k) || {}).l).filter(Boolean).join('، ') || '—';
+    $('pvOut').innerHTML = `
+      <dt>نوع الرحلة (كما سيُطبع)</dt><dd>${esc(trip.trip_type + (R.suffix ? ' ' + R.suffix : ''))}</dd>
+      <dt>البرنامج</dt><dd>${esc(R.program) || '—'}</dd>
+      <dt>موعد الذهاب ${typed ? '(اللي اتكتب في الفورم)' : '(الافتراضي)'}</dt><dd>${esc(dep)}</dd>
+      <dt>موعد العودة</dt><dd>${esc(R.ret || TD.DOTS)}</dd>
+      <dt>الاتجاه المعلَّم</dt><dd>${names(TD.DIRS, R.directions)}</dd>
+      <dt>منفذ الخروج المعلَّم</dt><dd>${names(TD.EXITS, R.exits)}</dd>`;
+  }
+  ['pvType', 'pvFrom', 'pvTo'].forEach(id => $(id).addEventListener('change', updatePreview));
+  $('pvDep').addEventListener('input', updatePreview);
+
+  // ---------------- الحفظ ----------------
+  $('saveBtn').addEventListener('click', async () => {
+    // تحذير لو فيه قاعدتين بنفس (نوع + من + إلى)
+    const seen = {}, dups = [];
+    state.rules.forEach(r => {
+      const key = [r.trip_type, r.from_location, r.to_location].map(TD.norm).join('|');
+      if (seen[key]) dups.push([r.trip_type || 'الكل', r.from_location || 'الكل', r.to_location || 'الكل'].join(' ← ')); seen[key] = 1;
+    });
+    if (dups.length && !confirm('فيه قواعد مكررة لنفس (النوع/من/إلى):\n' + dups.join('\n') + '\nالأولى في الترتيب هي اللي هتكسب. تكمل الحفظ؟')) return;
+
+    const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+    const params = new URLSearchParams();
+    params.append('action', 'saveTripDefaults');
+    params.append('token', SESSION.token);
+    params.append('rules', JSON.stringify(state.rules.map(TD.cleanRule)));
+    params.append('options', JSON.stringify(state.options));
+    try {
+      const res = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'POST', body: params });
+      const r = await res.json();
+      if (r && r.error === 'expired') { sessionStorage.removeItem('session'); return location.replace('login.html'); }
+      if (r && r.status === 'success') {
+        TD.cache({ rules: state.rules.map(TD.cleanRule), options: state.options, usingSeed: false });
+        markDirty(false);
+        showStatus('✔ تم الحفظ. الفورم والإخطار هيستخدموا القيم الجديدة.', 'success');
+      } else {
+        showStatus('❌ تعذر الحفظ: ' + ((r && (r.error || r.message)) || 'خطأ غير معروف'), 'danger');
+      }
+    } catch (err) {
+      console.error(err);
+      showStatus('❌ تعذر الاتصال بالسيرفر، تأكد من الإنترنت.', 'danger');
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 حفظ الكل';
+    }
+  });
+
+  // ---------------- تحميل ----------------
+  (async function init() {
+    const cached = TD.load();
+    state = { options: TD.clone(cached.options), rules: TD.clone(cached.rules) };
+    renderLists(); renderRules(); fillPreviewSelects(); updatePreview();
+
+    const st = await TD.fetchRemote(GOOGLE_APP_SCRIPT_URL, SESSION.token);
+    if (st === 'expired') { sessionStorage.removeItem('session'); return location.replace('login.html'); }
+    if (!st) { showStatus('⚠ تعذر تحميل الإعدادات من السيرفر، معروضة آخر نسخة محفوظة على الجهاز.', 'warning'); return; }
+    state = { options: TD.clone(st.options), rules: TD.clone(st.rules) };
+    renderLists(); renderRules(); fillPreviewSelects(); updatePreview();
+    if (st.usingSeed) {
+      showStatus('ℹ لسه ما اتحفظتش إعدادات على السيرفر. المعروض هو القيم الأصلية للنظام؛ عدّل واضغط «حفظ الكل» لتفعيلها.', 'info');
+    }
+  })();
+</script>
+</body>
+</html>
